@@ -1,0 +1,11 @@
+{
+  "name": "frontend-landing",
+  "private": true,
+  "scripts": {
+    "postinstall": "cd apps/frontend && npm install",
+    "dev": "cd apps/frontend && npm run dev",
+    "build": "cd apps/frontend && npm run build",
+    "preview": "cd apps/frontend && npm run preview",
+    "lint": "cd apps/frontend && npm run lint"
+  }
+}

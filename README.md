@@ -1,33 +1,33 @@
-# BrickData – Landing Page
+# immo-scan
 
-Landing Page für BrickData: Immobilien-Daten & Preisverläufe. Zeigt Features, Demo-Charts und Kontaktformular.
+High level infrastructure for the immo-scan project.
 
-## Sektionen
+## Structure
 
-- **Hero**: Headline und CTA-Buttons
-- **Features**: Preisverläufe, Alerts & Max-Bietpreis, Angebote managen, Datenvisualisierung
-- **Charts**: Demo-Charts (Preisbewegung €/m², Neue Inserate pro Tag) mit Mock-Daten
-- **Kontakt**: Formular (Name, E-Mail, Nachricht)
-
-## Tech Stack
-
-- React 19 + TypeScript
-- TailwindCSS v4 (@tailwindcss/postcss)
-- shadcn/ui (Radix UI)
-- recharts (Charts)
-
-## Entwicklung
-
-```bash
-npm install
-npx vite
+```
+immo-scan/
+│
+├── apps/
+│   ├── scraper/            # Main scraper application
+│   ├── backend-api/        # Backend API service (v2)
+│   └── frontend/           # Frontend application (MVP optional)
+│
+├── packages/
+│   ├── shared/             # Shared code and utilities
+│   ├── config/             # Shared configuration
+│   └── integrations/       # External service integrations
+│
+├── infra/                  # Infrastructure configuration
+│
+├── tests/                  # End-to-end and integration tests
+│
+├── .env.example            # Example environment variables
+├── docker-compose.yml      # Docker composition for development
+└── README.md               # This file
 ```
 
-oder `npm run dev` (wenn `vite` im PATH)
+## Getting Started
 
-## Build
-
-```bash
-npm run build
-npm run preview
-```
+1. Copy `.env.example` to `.env`.
+2. Configure your environment variables.
+3. Run `docker-compose up` to start services.

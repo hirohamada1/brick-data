@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  # Placeholder for scraper
+  # scraper:
+  #   build: ./apps/scraper
+  #   restart: unless-stopped
+  #   env_file: .env
+
+  # Placeholder for backend
+  # backend:
+  #   build: ./apps/backend-api
+  #   ports:
+  #     - "${API_PORT:-3000}:3000"
+  #   env_file: .env
+
+  # Database Example
+  # db:
+  #   image: postgres:15-alpine
+  #   ports:
+  #     - "${DB_PORT:-5432}:5432"
+  #   environment:
+  #     POSTGRES_USER: ${DB_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+  #     POSTGRES_DB: ${DB_NAME:-immo_scan}
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

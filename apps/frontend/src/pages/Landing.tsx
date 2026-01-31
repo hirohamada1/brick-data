@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import { Moon, Sun, TrendingUp, Bell, Home, BarChart3, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RotatingHeroTitle } from "@/components/landing/RotatingHeroTitle";
 import { PriceChart } from "@/components/dashboard/PriceChart";
 import { ListingsChart } from "@/components/dashboard/ListingsChart";
 
@@ -43,7 +44,7 @@ export function Landing() {
       {/* Topbar */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-          <span className="text-xl font-bold">BrickData</span>
+          <span className="text-xl font-bold">Brick<span style={{ color: '#10b77f' }}>Data</span></span>
           <nav className="flex items-center gap-4">
             <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Features
@@ -65,12 +66,9 @@ export function Landing() {
         {/* Hero */}
         <section className="container mx-auto px-4 md:px-8 py-24 md:py-32">
           <div className="max-w-3xl mx-auto text-center space-y-8">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-              Immobilien-Daten & Preisverläufe
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground">
-              BrickData zeigt Preisverläufe, Relistings und sendet Pings für neue Angebote. 
-              Erstelle Alerts mit Max-Bietpreis und bleib auf dem Laufenden.
+            <RotatingHeroTitle />
+            <p className="text-sm md:text-base text-muted-foreground">
+              Analysiere Preisverläufe, erkenne Chancen frühzeitig und reagiere schneller als der Markt.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button size="lg" className="rounded-2xl">
@@ -177,7 +175,7 @@ export function Landing() {
       {/* Footer */}
       <footer className="border-t border-border py-8">
         <div className="container mx-auto px-4 md:px-8 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} BrickData – Immobilien-Daten & Preisverläufe
+          © {new Date().getFullYear()} Brick<span style={{ color: '#10b77f' }}>Data</span> – Immobilien-Daten & Preisverläufe
         </div>
       </footer>
     </div>

@@ -18,7 +18,7 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-background">
       <div className="flex h-16 items-center gap-2 px-6">
-        <span className="text-xl font-bold text-foreground">BrickData</span>
+        <span className="text-xl font-bold text-foreground">Brick<span style={{ color: '#10b77f' }}>Data</span></span>
       </div>
       <nav className="mt-6 flex flex-col gap-1 px-3">
         {navItems.map(({ to, icon: Icon, label }) => (

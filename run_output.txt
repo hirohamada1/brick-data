@@ -1,0 +1,18 @@
+DEBUG: Script started
+2026-01-31 16:11:27,127 | INFO | Starting ImmoScout test scrape
+2026-01-31 16:11:27,623 | INFO | HTTP Request: POST https://api.brightdata.com/request "HTTP/1.1 400 Bad Request"
+Traceback (most recent call last):
+  File "/Users/leonbrandt/Coding_Projects/immos/immo-scan/apps/scraper/tests/test_immoscout_scrape.py", line 67, in <module>
+    main()
+    ~~~~^^
+  File "/Users/leonbrandt/Coding_Projects/immos/immo-scan/apps/scraper/tests/test_immoscout_scrape.py", line 45, in main
+    expose_ids = search_scraper.scrape_expose_ids(search_url)
+  File "/Users/leonbrandt/Coding_Projects/immos/immo-scan/apps/scraper/src/integrations/brightdata/immoscout_search_scraper.py", line 25, in scrape_expose_ids
+    html = self.client.fetch_html(search_url, render=True)
+  File "/Users/leonbrandt/Coding_Projects/immos/immo-scan/apps/scraper/src/integrations/brightdata/brightdata_client.py", line 59, in fetch_html
+    r.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/lib/python3.13/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '400 Bad Request' for url 'https://api.brightdata.com/request'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400

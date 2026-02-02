@@ -40,7 +40,7 @@ def run() -> None:
     expose_scraper = ImmoScoutExposeScraper(client=client)
 
     expose_ids = search_scraper.scrape_expose_ids(search_url)
-    expose_ids = expose_ids[:3]  # MVP test: only first 3
+    expose_ids = expose_ids[:10]  # MVP test: only first 10
 
     print(f"Found {len(expose_ids)} expose IDs")
 

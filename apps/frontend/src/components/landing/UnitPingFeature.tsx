@@ -58,13 +58,13 @@ export function UnitPingFeature() {
 
         <div className="max-w-4xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-16">
           {/* Chat / App Mock */}
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full max-w-md">
             <div className="rounded-3xl border-2 border-border bg-background shadow-xl overflow-hidden">
               {/* App Header */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/50">
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-muted/50">
                 <div className="relative">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary">
-                    <MessageCircle className="h-5 w-5" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary">
+                    <MessageCircle className="h-6 w-6" />
                   </div>
                   {pingTriggered && (
                     <span
@@ -82,11 +82,11 @@ export function UnitPingFeature() {
               </div>
 
               {/* Chat Messages */}
-              <div className="p-4 space-y-3 min-h-[200px]">
+              <div className="p-5 space-y-4 min-h-[260px]">
                 <div className="flex justify-start">
-                  <div className="rounded-2xl rounded-tl-sm bg-muted px-4 py-2 max-w-[85%]">
+                  <div className="rounded-2xl rounded-tl-sm bg-muted px-5 py-3 max-w-[85%]">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm">Suche neue Angebote</p>
+                      <p className="text-sm md:text-base">Suche neue Angebote</p>
                       <span className="loading-spinner" aria-hidden />
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">Vor 2 Min.</p>
@@ -95,16 +95,16 @@ export function UnitPingFeature() {
                 {pingTriggered && (
                   <div className="flex justify-start animate-ping-message">
                     <div className="rounded-2xl rounded-tl-sm border-2 border-primary/30 bg-primary/5 overflow-hidden max-w-[95%] shadow-lg">
-                      <div className="flex gap-3 p-3">
+                      <div className="flex gap-4 p-4">
                         <img
                           src={DEMO_UNIT.image}
                           alt="Altbauwohnung Berlin-Prenzlauer Berg"
-                          className="w-20 h-16 object-cover rounded-lg flex-shrink-0"
+                          className="w-28 h-24 object-cover rounded-lg flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-xs text-primary">Neue Einheit</p>
-                          <p className="text-xs font-medium truncate">{DEMO_UNIT.address}</p>
-                          <div className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">
+                          <p className="font-semibold text-sm text-primary">Neue Einheit</p>
+                          <p className="text-sm font-medium truncate">{DEMO_UNIT.address}</p>
+                          <div className="mt-1.5 space-y-0.5 text-xs text-muted-foreground">
                             <p>Kaufpreis: <span className="text-foreground font-medium">{DEMO_UNIT.kaufpreis}</span></p>
                             <p>Rendite: <span className="text-foreground font-medium">{DEMO_UNIT.rendite}</span></p>
                             <p>Cashflow: <span className="text-primary font-medium">{DEMO_UNIT.cashflow}</span></p>
@@ -120,17 +120,17 @@ export function UnitPingFeature() {
 
           {/* Right side: Feature bullets */}
           <div className="space-y-6 text-center lg:text-left">
-            <ul className="space-y-3 text-sm text-muted-foreground">
+            <ul className="space-y-4 text-base text-muted-foreground">
               <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
                 Alle relevanten Kennzahlen auf einen Blick
               </li>
               <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
                 Unfairer Zeitvorteil gegenüber dem Markt
               </li>
               <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
                 Sofortige Ersteinschätzung jeder Einheit
               </li>
             </ul>

@@ -27,6 +27,10 @@ venv/
 .coverage
 htmlcov/
 
+# Lead API (MVP)
+apps/frontend/data/
+apps/backend/data/
+
 # IDE
 .vscode/
 .idea/

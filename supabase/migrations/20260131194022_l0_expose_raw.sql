@@ -36,6 +36,10 @@ create table if not exists l0_expose_raw (
 create unique index if not exists l0_expose_raw_dedupe
     on l0_expose_raw (source, external_id, raw_hash);
 
+-- Single-row uniqueness per listing (for upserts)
+create unique index if not exists l0_expose_raw_source_external_id_unique
+    on l0_expose_raw (source, external_id);
+
 
 -- Fast lookup by source + external_id (latest versions)
 create index if not exists l0_expose_raw_lookup

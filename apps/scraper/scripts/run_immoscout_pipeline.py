@@ -1,13 +1,29 @@
 import os
 import asyncio
+import sys
+
+# Ensure apps/scraper/src is on sys.path when running this script directly.
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_scraper_src = os.path.abspath(os.path.join(_script_dir, "..", "src"))
+if _scraper_src not in sys.path:
+    sys.path.insert(0, _scraper_src)
 from dotenv import load_dotenv
-from integrations.brightdata_async import BrightDataClient, BrightDataConfig
+from integrations.brightdata.brightdata_async import BrightDataClient, BrightDataConfig
 from scrapers.immoscout_search_scraper import ImmoScoutSearchScraper
 from scrapers.immoscout_expose_scraper import ImmoScoutExposeScraper
+from integrations.storage.l0_writer import from_env as l0_from_env
+from integrations.storage.l1_upserter import from_env as l1_from_env
 
 # Load .env from project root
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-load_dotenv(os.path.join(base_dir, ".env"))
+
+from dotenv import load_dotenv, find_dotenv
+
+dotenv_path = find_dotenv(".env.local", usecwd=True)
+if not dotenv_path:
+    raise SystemExit("Could not find .env.local")
+
+load_dotenv(dotenv_path, override=True)
 
 # simple concurrency limiter
 class SemaphorePool:
@@ -31,9 +47,12 @@ async def main():
     if not cfg.api_key:
         raise SystemExit("Missing BRIGHTDATA_API_KEY in .env")
 
-    client = BrightDataClient(cfg)
+    base_url = os.getenv("BRIGHTDATA_BASE_URL", "https://api.brightdata.com")
+    client = BrightDataClient(cfg, base_url=base_url)
     search_scraper = ImmoScoutSearchScraper(client)
     expose_scraper = ImmoScoutExposeScraper(client)
+    l0_writer = l0_from_env()
+    l1_upserter = l1_from_env()
 
     search_url = "https://www.immobilienscout24.de/Suche/de/sachsen-anhalt/magdeburg/wohnung-kaufen"
     hits = await search_scraper.scrape(search_url)
@@ -45,7 +64,13 @@ async def main():
 
     async def scrape_one(hit):
         listing = await expose_scraper.scrape(hit.external_id, hit.expose_url)
-        print(listing)
+        l0_res = l0_writer.insert_expose(expose=listing)
+        if not l0_res.id:
+            print(f"L0 dedupe: external_id={listing.get('external_id')} hash={l0_res.raw_hash}")
+            return None
+        listing["latest_l0_id"] = l0_res.id
+        l1_res = l1_upserter.upsert_listing(listing=listing)
+        print(f"L0 inserted id={l0_res.id} L1 upserted id={l1_res.id}")
         return listing
 
     results = await asyncio.gather(*[

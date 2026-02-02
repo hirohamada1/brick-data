@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import json
 import re
 
@@ -44,6 +44,28 @@ def _pick_listing_jsonld(blocks: List[dict]) -> Optional[dict]:
         if b.get("@type") in ("Offer", "Product", "Apartment", "Residence", "House", "SingleFamilyResidence"):
             return b
     return blocks[0] if blocks else None
+
+
+def _split_street_address(street_address: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+    if not street_address or not isinstance(street_address, str):
+        return None, None
+    primary = street_address.split(",")[0].strip()
+    if not primary:
+        return None, None
+    tokens = primary.split()
+    house_number = None
+    idx = None
+    for i in range(len(tokens) - 1, -1, -1):
+        if any(ch.isdigit() for ch in tokens[i]):
+            house_number = tokens[i]
+            idx = i
+            break
+    if idx is None:
+        return primary, None
+    street = " ".join(tokens[:idx]).strip()
+    if not street:
+        return primary, None
+    return street, house_number
 
 
 # -------------------------
@@ -139,6 +161,15 @@ _ROOMS_DTDD_RE = re.compile(
 
 _POSTCODE_CITY_RE = re.compile(r"(\b\d{5}\b)\s+([A-ZÄÖÜ][A-Za-zÄÖÜäöüß\- ]{2,})")
 _IMG_URL_RE = re.compile(r"https?://[^\"'\\]+?\.(?:jpg|jpeg|png|webp)", re.IGNORECASE)
+_STREET_AND_HOUSE_RE = re.compile(r'"streetAndHouseNumber"\s*:\s*"([^"]+)"', re.IGNORECASE)
+_ADDRESS_STREET_HOUSE_RE = re.compile(
+    r'"address"\s*:\s*\{[^}]{0,500}?"street"\s*:\s*"([^"]+)"[^}]{0,200}?"houseNumber"\s*:\s*"([^"]+)"',
+    re.IGNORECASE | re.DOTALL,
+)
+_ADDRESS_BLOCK_RE = re.compile(
+    r'<span[^>]+data-qa="is24-expose-address"[^>]*>[\s\S]{0,2000}?</span>',
+    re.IGNORECASE,
+)
 
 
 def _extract_living_space_sqm_from_html(html: str) -> Optional[float]:
@@ -183,6 +214,32 @@ def _extract_rooms_from_html(html: str) -> Optional[float]:
     return None
 
 
+def _extract_street_house_from_html(html: str) -> Tuple[Optional[str], Optional[str]]:
+    m = _STREET_AND_HOUSE_RE.search(html)
+    if m:
+        return _split_street_address(m.group(1))
+
+    m2 = _ADDRESS_STREET_HOUSE_RE.search(html)
+    if m2:
+        street = m2.group(1).strip()
+        house_number = m2.group(2).strip()
+        return street or None, house_number or None
+
+    m3 = _ADDRESS_BLOCK_RE.search(html)
+    if m3:
+        text = _strip_tags(m3.group(0))
+        if "vollständige adresse" in text.lower():
+            return None, None
+        parts = [p.strip() for p in text.split("\n") if p.strip()]
+        for part in parts:
+            if _POSTCODE_CITY_RE.search(part):
+                continue
+            if any(ch.isdigit() for ch in part):
+                return _split_street_address(part)
+
+    return None, None
+
+
 def map_expose_html_to_listing(*, external_id: str, expose_url: str, html: str) -> Dict[str, Any]:
     jsonlds = _try_parse_jsonld(html)
     best = _pick_listing_jsonld(jsonlds) or {}
@@ -191,6 +248,11 @@ def map_expose_html_to_listing(*, external_id: str, expose_url: str, html: str) 
     addr = best.get("address") if isinstance(best.get("address"), dict) else {}
     postcode: Optional[str] = addr.get("postalCode")
     city: Optional[str] = addr.get("addressLocality")
+    street: Optional[str] = None
+    house_number: Optional[str] = None
+    street_address = addr.get("streetAddress")
+    if isinstance(street_address, str):
+        street, house_number = _split_street_address(street_address)
 
     # Images (JSON-LD first)
     images: List[str] = []
@@ -236,6 +298,12 @@ def map_expose_html_to_listing(*, external_id: str, expose_url: str, html: str) 
     if not images:
         images = list(dict.fromkeys(_IMG_URL_RE.findall(html)))
 
+    # Address fallback
+    if street is None or house_number is None:
+        fb_street, fb_house = _extract_street_house_from_html(html)
+        street = street or fb_street
+        house_number = house_number or fb_house
+
     # Title & price from JSON-LD
     title = best.get("name")
     price_eur: Optional[float] = None
@@ -253,6 +321,8 @@ def map_expose_html_to_listing(*, external_id: str, expose_url: str, html: str) 
         "price_eur": price_eur,
         "living_space_sqm": living_space_sqm,
         "rooms": rooms,
+        "street": street,
+        "house_number": house_number,
         "postcode": postcode,
         "city": city,
         "quarter": quarter,

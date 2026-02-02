@@ -50,13 +50,13 @@ class L0InsertResult:
 @dataclass(frozen=True)
 class L0Writer:
     """
-    Writes immutable L0 rows to Postgres table `l0_raw_expose`.
+    Writes L0 rows to Postgres table `l0_expose_raw`.
 
-    - Dedupe via (source, external_id, raw_hash)
+    - One row per (source, external_id)
     - Stores the *mapped* record as JSONB under `raw`
     """
     database_url: str
-    table: str = "l0_raw_expose"
+    table: str = "l0_expose_raw"
     parser_version: str = "immoscout_expose_scraper_v1"
 
     def insert_expose(self, *, expose: Dict[str, Any], scraped_at: Optional[datetime] = None) -> L0InsertResult:
@@ -79,7 +79,12 @@ class L0Writer:
                 (source, external_id, url, scraped_at, raw, raw_hash, parser_version)
             values
                 (%s, %s, %s, %s, %s, %s, %s)
-            on conflict (source, external_id, raw_hash) do nothing
+            on conflict (source, external_id) do update set
+                url = excluded.url,
+                scraped_at = excluded.scraped_at,
+                raw = excluded.raw,
+                raw_hash = excluded.raw_hash,
+                parser_version = excluded.parser_version
             returning id;
         """
 
@@ -138,7 +143,7 @@ class L0Writer:
 def from_env(
     *,
     env_key: str = "DATABASE_URL",
-    table: str = "l0_raw_expose",
+    table: str = "l0_expose_raw",
     parser_version: str = "immoscout_expose_scraper_v1",
 ) -> L0Writer:
     db_url = os.getenv(env_key)

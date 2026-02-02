@@ -18,12 +18,22 @@ Landing Page fuer BrickData: Immobilien-Daten & Preisverlaeufe. Zeigt Features, 
 
 ## Entwicklung
 
+**Wichtig:** Alle Befehle im Ordner **`apps/frontend`** ausführen:
+
 ```bash
+cd apps/frontend
 npm install
-npx vite
+npm run dev
 ```
 
-oder `npm run dev` (wenn `vite` im PATH)
+- **`npm run dev`** – startet Vite + Lead-API (Node), Leads in `data/leads.json`.
+- **`npm run dev:backend`** – startet Vite + Backend Lead-API (Python). Vorher im Backend: `pip install -r requirements.txt`. Für Python: ggf. `python3` statt `python` nutzen.
+- **`npm run dev:vite`** – nur Vite (ohne API; Formular /start schlägt dann fehl).
+
+**„command not found“ / Fehler:**  
+- `npm run dev` startet jetzt über ein eigenes Skript (ohne `concurrently`).  
+- Immer im Ordner **`apps/frontend`** arbeiten: `cd apps/frontend`, dann `npm install` und `npm run dev`.  
+- Wenn der Projektpfad Leerzeichen enthält (z. B. „Frontend : landing mit UI“), die Befehle aus diesem Ordner ausführen – das Skript kommt damit zurecht.
 
 ## Build
 

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "@/context/ThemeContext";
 import { Moon, Sun, TrendingUp, Bell, Home, BarChart3, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { RotatingHeroTitle } from "@/components/landing/RotatingHeroTitle";
 import { UnitPingFeature } from "@/components/landing/UnitPingFeature";
 import { PriceChart } from "@/components/dashboard/PriceChart";
 import { ListingsChart } from "@/components/dashboard/ListingsChart";
+import { Footer } from "@/components/layout/Footer";
 
 const features = [
   {
@@ -15,8 +17,8 @@ const features = [
   },
   {
     icon: Bell,
-    title: "Alerts & Max-Bietpreis",
-    description: "Setze Max-Bietpreise und erhalte Pings bei neuen Inseraten oder Preissenkungen.",
+    title: "Alerts & Preislimits",
+    description: "Lege individuelle Preislimits fest und bleibe bei neuen Inseraten oder Preisänderungen informiert.",
   },
   {
     icon: Home,
@@ -25,14 +27,22 @@ const features = [
   },
   {
     icon: BarChart3,
-    title: "Datenvisualisierung",
-    description: "Charts zu €/m²-Entwicklung und neuen Inseraten pro Tag.",
+    title: "Marktanalysen & Trends",
+    description: "Erkenne Preisentwicklungen, Angebotsdynamiken und Marktbewegungen auf einen Blick.",
   },
 ];
 
 export function Landing() {
   const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
+
+  useEffect(() => {
+    if (location.hash === "#contact") {
+      const el = document.getElementById("contact");
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [location.hash]);
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,12 +59,6 @@ export function Landing() {
           <nav className="flex items-center gap-4">
             <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Features
-            </a>
-            <a href="#unit-ping" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Neue Einheiten
-            </a>
-            <a href="#charts" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Charts
             </a>
             <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Kontakt
@@ -75,9 +79,11 @@ export function Landing() {
               Analysiere Preisverläufe, erkenne Chancen frühzeitig und reagiere schneller als der Markt.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" className="rounded-2xl">
-                Jetzt starten
-                <ArrowRight className="ml-2 h-4 w-4" />
+              <Button size="lg" className="rounded-2xl" asChild>
+                <Link to="/start">
+                  Jetzt starten
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
               </Button>
               <Button size="lg" variant="outline" className="rounded-2xl" asChild>
                 <a href="#contact">Kontakt aufnehmen</a>
@@ -114,7 +120,7 @@ export function Landing() {
         <section id="charts" className="py-12 md:py-16">
           <div className="container mx-auto px-4 md:px-8">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-              Datenvisualisierung
+              Marktanalysen & Trends
             </h2>
             <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
               <PriceChart />
@@ -179,12 +185,7 @@ export function Landing() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-8">
-        <div className="container mx-auto px-4 md:px-8 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Brick<span style={{ color: '#10b77f' }}>Data</span> – Immobilien-Daten & Preisverläufe
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

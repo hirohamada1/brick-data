@@ -7,9 +7,21 @@ from typing import Iterable, List, Set
 
 from integrations.brightdata.brightdata_client import BrightDataUnlockerClient
 
+from storage.l0_writer import from_env
+
+# somewhere in your pipeline orchestration (not inside _extract_raw)
+writer = from_env()
+
+listing, html = scraper.scrape_expose(expose_id)
+
+# convert Listing -> dict (pydantic v2)
+payload = listing.model_dump()
+
+res = writer.insert_expose(expose=payload)
+
+logging.info(f"L0 write: inserted={res.inserted} id={res.id} hash={res.raw_hash}")
 
 EXPOSE_ID_RE = re.compile(r"/expose/(\d+)", re.IGNORECASE)
-
 
 @dataclass(frozen=True)
 class ImmoScoutSearchScraper:

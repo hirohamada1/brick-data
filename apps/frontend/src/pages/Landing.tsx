@@ -3,6 +3,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { Moon, Sun, TrendingUp, Bell, Home, BarChart3, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RotatingHeroTitle } from "@/components/landing/RotatingHeroTitle";
+import { UnitPingFeature } from "@/components/landing/UnitPingFeature";
 import { PriceChart } from "@/components/dashboard/PriceChart";
 import { ListingsChart } from "@/components/dashboard/ListingsChart";
 
@@ -49,6 +50,9 @@ export function Landing() {
             <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Features
             </a>
+            <a href="#unit-ping" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Neue Einheiten
+            </a>
             <a href="#charts" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Charts
             </a>
@@ -83,7 +87,7 @@ export function Landing() {
         </section>
 
         {/* Features */}
-        <section id="features" className="border-t border-border bg-muted/30 py-24 md:py-32">
+        <section id="features" className="border-t border-border bg-muted/30 py-12 md:py-16">
           <div className="container mx-auto px-4 md:px-8">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">Features</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -103,8 +107,11 @@ export function Landing() {
           </div>
         </section>
 
+        {/* Unit Ping Feature */}
+        <UnitPingFeature />
+
         {/* Charts */}
-        <section id="charts" className="py-24 md:py-32">
+        <section id="charts" className="py-12 md:py-16">
           <div className="container mx-auto px-4 md:px-8">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
               Datenvisualisierung
@@ -120,7 +127,7 @@ export function Landing() {
         </section>
 
         {/* Contact */}
-        <section id="contact" className="border-t border-border bg-muted/30 py-24 md:py-32">
+        <section id="contact" className="border-t border-border bg-muted/30 py-12 md:py-16">
           <div className="container mx-auto px-4 md:px-8 max-w-2xl">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Kontakt</h2>
             <p className="text-muted-foreground text-center mb-12">

@@ -1,9 +1,10 @@
 # General
 .DS_Store
-.env
+
+.env.local
+.env.prod
 *.log
 
-# Node
 node_modules/
 .vite/
 dist/

@@ -17,6 +17,30 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+#Next.js
+.next/
+out/
+
+# Next.js (app-specific)
+apps/frontend/.next/
+
+# Dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+
+# Env files
+.env*.local
+
+# OS / editor
+.DS_Store
+
 # Python
 __pycache__/
 *.py[cod]

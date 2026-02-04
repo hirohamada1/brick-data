@@ -18,7 +18,7 @@ function App() {
           <Route path="/start" element={<Start />} />
           <Route path="/listings" element={<ListingsPage />} />
           <Route path="/watchlists/new" element={<WatchlistCreatePage />} />
-          <Route path="/watchlists/:id/listings" element={<WatchlistListingsPage />} />
+          {/*<Route path="/watchlists/:id/listings" element={<WatchlistListingsPage />} />*/}
           <Route path="/impressum" element={<Impressum />} />
           <Route path="/datenschutz" element={<Datenschutz />} />
           <Route path="/kontakt" element={<Kontakt />} />

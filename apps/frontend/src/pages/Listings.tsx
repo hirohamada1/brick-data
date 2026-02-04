@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -53,7 +53,8 @@ const SOURCE_OPTIONS: { value: ListingSource; label: string }[] = [
 ];
 
 export function Listings() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const openId = searchParams.get("open");
   const {
     listings,
@@ -101,6 +102,14 @@ export function Listings() {
     () => listings.find((l) => l.id === openId),
     [listings, openId]
   );
+
+  const setOpenParam = (value: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) params.set("open", value);
+    else params.delete("open");
+    const next = params.toString();
+    router.replace(next ? `/listings?${next}` : "/listings", { scroll: false });
+  };
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -349,9 +358,7 @@ export function Listings() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() =>
-                                setSearchParams({ open: listing.id })
-                              }
+                              onClick={() => setOpenParam(listing.id)}
                             >
                               <ExternalLink className="h-4 w-4" />
                             </Button>
@@ -399,7 +406,7 @@ export function Listings() {
       <Dialog
         open={!!openId}
         onOpenChange={(open) => {
-          if (!open) setSearchParams({});
+          if (!open) setOpenParam(null);
         }}
       >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" showClose>

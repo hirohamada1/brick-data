@@ -11,10 +11,7 @@ type RequestOptions = RequestInit & {
 };
 
 function getDefaultBaseUrl(): string {
-  if (typeof window === "undefined") {
-    return process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-  }
-  return "";
+  return process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 }
 
 function buildUrl(path: string, baseUrl?: string): string {

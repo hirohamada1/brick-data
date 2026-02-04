@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 export function Footer() {
   return (
@@ -10,19 +10,19 @@ export function Footer() {
           </p>
           <nav className="flex flex-wrap items-center justify-center gap-6 md:gap-8 order-1 md:order-2" aria-label="Rechtliche Links">
             <Link
-              to="/impressum"
+              href="/impressum"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Impressum
             </Link>
             <Link
-              to="/datenschutz"
+              href="/datenschutz"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Datenschutz
             </Link>
             <Link
-              to="/kontakt"
+              href="/kontakt"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Kontakt

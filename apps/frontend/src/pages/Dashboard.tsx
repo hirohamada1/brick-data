@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import {
   Home,
   Bell,
@@ -37,19 +37,19 @@ export function Dashboard() {
           Simuliere neues Listing
         </Button>
         <Button variant="outline" size="lg" asChild>
-          <Link to="/alerts">
+          <Link href="/alerts">
             <Plus className="h-4 w-4 mr-2" />
             Neue Watchlist
           </Link>
         </Button>
         <Button variant="outline" size="lg" asChild>
-          <Link to="/alerts">
+          <Link href="/alerts">
             <Bell className="h-4 w-4 mr-2" />
             Alert erstellen
           </Link>
         </Button>
         <Button variant="outline" size="lg" asChild>
-          <Link to="/listings">
+          <Link href="/listings">
             <Download className="h-4 w-4 mr-2" />
             Listing importieren
           </Link>

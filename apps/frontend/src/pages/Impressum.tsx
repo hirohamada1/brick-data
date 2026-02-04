@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Footer } from "@/components/layout/Footer";
 
 export function Impressum() {
@@ -7,7 +7,7 @@ export function Impressum() {
       <header className="border-b border-border bg-background">
         <div className="container mx-auto px-4 md:px-8 py-4">
           <Link
-            to="/"
+            href="/"
             className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity"
           >
             Brick<span style={{ color: "#10b77f" }}>Data</span>
@@ -72,7 +72,7 @@ export function Impressum() {
 
         <div className="mt-12 pt-8 border-t border-border">
           <Link
-            to="/"
+            href="/"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             ← Zurück zur Startseite

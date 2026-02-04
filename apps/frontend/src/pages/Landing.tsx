@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useTheme } from "@/context/ThemeContext";
 import { Moon, Sun, TrendingUp, Bell, Home, BarChart3, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,15 +34,20 @@ const features = [
 
 export function Landing() {
   const { theme, toggleTheme } = useTheme();
-  const location = useLocation();
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
 
   useEffect(() => {
-    if (location.hash === "#contact") {
-      const el = document.getElementById("contact");
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [location.hash]);
+    const scrollToHash = () => {
+      const hash = window.location.hash;
+      if (hash === "#contact") {
+        const el = document.getElementById("contact");
+        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+    scrollToHash();
+    window.addEventListener("hashchange", scrollToHash);
+    return () => window.removeEventListener("hashchange", scrollToHash);
+  }, []);
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +85,7 @@ export function Landing() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button size="lg" className="rounded-2xl" asChild>
-                <Link to="/start">
+                <Link href="/start">
                   Jetzt starten
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>

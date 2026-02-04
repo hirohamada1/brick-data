@@ -50,7 +50,7 @@ export default function WatchlistPage() {
             Verwalten Sie Ihre gespeicherten Suchkonfigurationen
           </p>
         </div>
-        <Link href="/watchlist/new">
+        <Link href="/watchlists/new">
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Plus className="mr-2 h-4 w-4" />
             Neue Watchlist
@@ -128,7 +128,7 @@ export default function WatchlistPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               Erstellen Sie Ihre erste Watchlist, um Immobilienangebote zu tracken.
             </p>
-            <Link href="/watchlist/new" className="mt-4">
+            <Link href="/watchlists/new" className="mt-4">
               <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
                 <Plus className="mr-2 h-4 w-4" />
                 Watchlist erstellen

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ export function RecentSignals() {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Letzte Signals</CardTitle>
         <Button variant="outline" size="sm" asChild>
-          <Link to="/alerts">
+          <Link href="/alerts">
             Alle anzeigen
             <ArrowRight className="h-4 w-4 ml-1" />
           </Link>
@@ -68,7 +68,7 @@ export function RecentSignals() {
               return (
                 <Link
                   key={ping.id}
-                  to={`/listings?open=${ping.listingId}`}
+                  href={`/listings?open=${ping.listingId}`}
                   className="flex items-center justify-between p-3 rounded-2xl border border-border hover:bg-muted/50 transition-colors group"
                 >
                   <div className="flex items-center gap-3">

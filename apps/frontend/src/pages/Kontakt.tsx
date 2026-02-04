@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/layout/Footer";
@@ -9,7 +9,7 @@ export function Kontakt() {
       <header className="border-b border-border bg-background">
         <div className="container mx-auto px-4 md:px-8 py-4">
           <Link
-            to="/"
+            href="/"
             className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity"
           >
             Brick<span style={{ color: "#10b77f" }}>Data</span>
@@ -25,13 +25,13 @@ export function Kontakt() {
           Du hast Fragen oder möchtest mehr erfahren? Nutze unser Kontaktformular auf der Startseite.
         </p>
         <Button size="lg" className="rounded-2xl" asChild>
-          <Link to="/#contact">
+          <Link href="/#contact">
             <Mail className="mr-2 h-4 w-4" />
             Zum Kontaktformular
           </Link>
         </Button>
         <Link
-          to="/"
+          href="/"
           className="mt-8 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           ← Zurück zur Startseite

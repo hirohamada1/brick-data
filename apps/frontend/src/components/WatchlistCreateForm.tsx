@@ -77,9 +77,9 @@ export function WatchlistCreateForm() {
     const vacancy = vacancyFromInput(form.default_vacancy_rate);
     if (form.default_vacancy_rate.trim() !== "" && vacancy === null) {
       nextErrors.default_vacancy_rate = "Bitte eine Zahl eingeben.";
-    } else if (vacancy !== null && (vacancy < 0 || vacancy > 1)) {
+    } else if (vacancy !== null && (vacancy < 0 || vacancy > 100)) {
       nextErrors.default_vacancy_rate =
-        "Leerstandsquote muss zwischen 0 und 1 liegen.";
+        "Leerstandsquote muss zwischen 0 und 100 liegen.";
     }
 
     const reserve = numberFromInput(form.default_maintenance_reserve_monthly_eur);

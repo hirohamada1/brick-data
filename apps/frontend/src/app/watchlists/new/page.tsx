@@ -1,6 +1,6 @@
 "use client";
 
-import { WatchlistCreateForm } from "@/components/WatchlistCreateForm";
+import { WatchlistForm } from "@/components/watchlist/watchlist-form"
 
 export default function WatchlistCreatePage() {
   return (
@@ -11,7 +11,7 @@ export default function WatchlistCreatePage() {
           Lege eine neue Watchlist mit Standardwerten fuer manuelle Inputs an.
         </p>
       </div>
-      <WatchlistCreateForm />
+      <WatchlistForm />
     </div>
   );
 }

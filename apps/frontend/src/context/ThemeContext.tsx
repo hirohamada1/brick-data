@@ -17,18 +17,26 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    const stored = localStorage.getItem("brickdata-theme") as Theme | null;
-    if (stored) return stored;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
-  });
+  const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem("brickdata-theme") as Theme | null;
+    if (stored === "light" || stored === "dark") {
+      setThemeState(stored);
+      return;
+    }
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setThemeState(prefersDark ? "dark" : "light");
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
     document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.add(theme);
-    localStorage.setItem("brickdata-theme", theme);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("brickdata-theme", theme);
+    }
   }, [theme]);
 
   const setTheme = (t: Theme) => setThemeState(t);

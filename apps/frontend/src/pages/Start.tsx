@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Footer } from "@/components/layout/Footer";
 import { OnboardingForm, type LeadData } from "@/components/landing/OnboardingForm";
 import { CheckCircle2 } from "lucide-react";
@@ -16,7 +16,7 @@ async function submitLead(data: LeadData): Promise<void> {
     });
   } catch (e) {
     throw new Error(
-      "Lead-API nicht erreichbar. Im Ordner apps/frontend bitte 'npm run dev' ausführen (startet Frontend + API)."
+      "Lead-API nicht erreichbar. Im Ordner apps/frontend bitte 'npm run dev' ausführen."
     );
   }
   if (!res.ok) {
@@ -28,7 +28,7 @@ async function submitLead(data: LeadData): Promise<void> {
     } catch {
       err = new Error(
         res.status === 502 || res.status === 503
-          ? "Lead-API nicht erreichbar. Im Ordner apps/frontend bitte 'npm run dev' ausführen (startet Frontend + API)."
+          ? "Lead-API nicht erreichbar. Im Ordner apps/frontend bitte 'npm run dev' ausführen."
           : res.status === 500
             ? "Ein Fehler ist aufgetreten. Bitte später erneut versuchen."
             : `Fehler: ${res.status}`
@@ -52,7 +52,7 @@ export function Start() {
       <header className="border-b border-border bg-background">
         <div className="container mx-auto px-4 md:px-8 py-4">
           <Link
-            to="/"
+            href="/"
             className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity"
           >
             Brick<span style={{ color: "#10b77f" }}>Data</span>
@@ -74,7 +74,7 @@ export function Start() {
               Wir melden uns in Kürze.
             </p>
             <Link
-              to="/"
+              href="/"
               className="text-sm text-primary hover:underline font-medium"
             >
               ← Zurück zur Startseite

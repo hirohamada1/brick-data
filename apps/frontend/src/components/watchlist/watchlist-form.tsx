@@ -11,10 +11,16 @@ import {
   Calculator,
   Euro,
   Info,
-  AlertCircle
+  AlertCircle,
+  Target,
+  Percent,
+  Banknote,
+  Wrench,
+  TrendingUp
 } from "lucide-react"
-import { DEFAULT_VALUES, type WatchlistFormData } from "@/types/watchlist"
+import { DEFAULT_VALUES, type WatchlistFormData, type ZielmodusType as Zielmodus } from "@/types/watchlist"
 import { cn } from "@/lib/utils"
+import { createWatchlist, triggerWatchlistRun } from "@/lib/api"
 
 interface FormSectionProps {
   icon: React.ReactNode
@@ -126,14 +132,51 @@ export function WatchlistForm() {
   const summary = useMemo(() => {
     const kaufnebenkosten = formData.notarkosten + formData.grunderwerbssteuer + formData.grundbuchkosten
     const hausgeldGesamt = formData.hausgeld.umlagefaehig + formData.hausgeld.nichtUmlagefaehig
+    const annuitaet = formData.zinssatz + formData.tilgungssatz
     return {
       kaufnebenkosten,
       hausgeldGesamt,
       mietausfall: formData.mietausfall,
       kaltmiete: formData.kaltmieteProQm,
       name: formData.name,
+      zielmodus: formData.zielmodus,
+      annuitaet,
+      zielDscr: formData.zielDscr,
+      instandhaltung: formData.instandhaltungProQmMonat,
     }
   }, [formData])
+
+  const updateZielmodus = (type: Zielmodus) => {
+    if (type === 'nettorendite') {
+      setFormData((prev) => ({
+        ...prev,
+        zielmodus: {
+          type: 'nettorendite',
+          zielNettorendite: 5,
+          erlaubteAbweichung: 0.5,
+        },
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        zielmodus: {
+          type: 'cashflow',
+          zielCashflow: 200,
+          erlaubteAbweichung: 50,
+        },
+      }))
+    }
+  }
+
+  const updateZielmodusField = (field: string, value: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      zielmodus: {
+        ...prev.zielmodus,
+        [field]: value,
+      },
+    }))
+  }
 
   const isFormValid = formData.name.trim() !== ""
 
@@ -142,10 +185,45 @@ export function WatchlistForm() {
     
     setIsSubmitting(true)
     try {
-      // TODO: Connect to backend API
-      console.log("Submitting watchlist:", formData)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      alert("Watchlist erstellt!")
+      let specificDefaults;
+      if (formData.zielmodus.type === "nettorendite") {
+        specificDefaults = {
+          zielmodus: "nettorendite" as const,
+          zielNettorendite: formData.zielmodus.zielNettorendite,
+          erlaubteAbweichungNettorendite: formData.zielmodus.erlaubteAbweichung,
+        };
+      } else {
+        specificDefaults = {
+          zielmodus: "cashflow" as const,
+          zielCashflow: formData.zielmodus.zielCashflow,
+          erlaubteAbweichungCashflow: formData.zielmodus.erlaubteAbweichung,
+        };
+      }
+
+      const defaults = {
+        hausgeld: {
+          umlagefaehig: formData.hausgeld.umlagefaehig,
+          nichtUmlagefaehig: formData.hausgeld.nichtUmlagefaehig,
+        },
+        notarkosten: formData.notarkosten,
+        grunderwerbssteuer: formData.grunderwerbssteuer,
+        grundbuchkosten: formData.grundbuchkosten,
+        mietausfall: formData.mietausfall,
+        kaltmieteProQm: formData.kaltmieteProQm,
+        zinssatz: formData.zinssatz,
+        tilgungssatz: formData.tilgungssatz,
+        instandhaltungProQmMonat: formData.instandhaltungProQmMonat,
+        zielDscr: formData.zielDscr,
+        ...specificDefaults,
+      }
+      const payload = {
+        name: formData.name.trim(),
+        search_url: formData.searchUrl.trim(),
+        defaults,
+      }
+      const created = await createWatchlist(payload)
+      await triggerWatchlistRun(created.id, "full_refresh")
+      window.location.assign(`/watchlists/${created.id}/listings`)
     } catch (error) {
       console.error("Error creating watchlist:", error)
     } finally {
@@ -195,6 +273,90 @@ export function WatchlistForm() {
             </div>
           </div>
         </FormSection>
+
+                {/* Zielmodus */}
+        <FormSection
+          icon={<Target className="h-6 w-6 text-primary" />}
+          title="Zielmodus"
+          subtitle="Wählen Sie Ihr Anlageziel"
+        >
+          <div className="space-y-6">
+            {/* Toggle Buttons */}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => updateZielmodus('nettorendite')}
+                className={cn(
+                  "flex-1 rounded-lg px-4 py-3 text-sm font-medium transition-all",
+                  formData.zielmodus.type === 'nettorendite'
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-input text-muted-foreground hover:bg-input/80"
+                )}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Percent className="h-4 w-4" />
+                  Nettorendite
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => updateZielmodus('cashflow')}
+                className={cn(
+                  "flex-1 rounded-lg px-4 py-3 text-sm font-medium transition-all",
+                  formData.zielmodus.type === 'cashflow'
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-input text-muted-foreground hover:bg-input/80"
+                )}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Banknote className="h-4 w-4" />
+                  Cashflow
+                </div>
+              </button>
+            </div>
+
+            {/* Conditional Fields */}
+            {formData.zielmodus.type === 'nettorendite' ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <InputWithSuffix
+                  label="Ziel Nettorendite"
+                  value={formData.zielmodus.zielNettorendite}
+                  onChange={(v) => updateZielmodusField("zielNettorendite", parseFloat(v) || 0)}
+                  suffix="%"
+                  placeholder="5"
+                  helperText="Gewünschte jährliche Nettorendite"
+                />
+                <InputWithSuffix
+                  label="Erlaubte Abweichung"
+                  value={formData.zielmodus.erlaubteAbweichung}
+                  onChange={(v) => updateZielmodusField("erlaubteAbweichung", parseFloat(v) || 0)}
+                  suffix="%"
+                  placeholder="0.5"
+                  helperText="Toleranz nach unten"
+                />
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <InputWithSuffix
+                  label="Ziel Cashflow"
+                  value={formData.zielmodus.zielCashflow}
+                  onChange={(v) => updateZielmodusField("zielCashflow", parseFloat(v) || 0)}
+                  suffix="€"
+                  placeholder="200"
+                  helperText="Gewünschter monatlicher Cashflow"
+                />
+                <InputWithSuffix
+                  label="Erlaubte Abweichung"
+                  value={formData.zielmodus.erlaubteAbweichung}
+                  onChange={(v) => updateZielmodusField("erlaubteAbweichung", parseFloat(v) || 0)}
+                  suffix="€"
+                  placeholder="50"
+                  helperText="Toleranz nach unten"
+                />
+              </div>
+            )}
+          </div>
+        </FormSection> 
 
         {/* Hausgeld */}
         <FormSection
@@ -291,6 +453,58 @@ export function WatchlistForm() {
             </div>
           </div>
         </FormSection>
+ 
+        {/* Finanzierung */}
+        <FormSection
+          icon={<TrendingUp className="h-6 w-6 text-primary" />}
+          title="Finanzierung"
+          subtitle="Zins- und Tilgungsparameter"
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <InputWithSuffix
+              label="Zinssatz"
+              value={formData.zinssatz}
+              onChange={(v) => updateField("zinssatz", parseFloat(v) || 0)}
+              suffix="%"
+              placeholder="4"
+              helperText="Standard: 4%"
+            />
+            <InputWithSuffix
+              label="Tilgungssatz"
+              value={formData.tilgungssatz}
+              onChange={(v) => updateField("tilgungssatz", parseFloat(v) || 0)}
+              suffix="%"
+              placeholder="2"
+              helperText="Standard: 2%"
+            />
+          </div>
+        </FormSection>
+
+        {/* Instandhaltung & DSCR */}
+        <FormSection
+          icon={<Wrench className="h-6 w-6 text-primary" />}
+          title="Instandhaltung & Kennzahlen"
+          subtitle="Rücklagen und Sicherheitskennzahlen"
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <InputWithSuffix
+              label="Instandhaltung pro qm/Monat"
+              value={formData.instandhaltungProQmMonat}
+              onChange={(v) => updateField("instandhaltungProQmMonat", parseFloat(v) || 0)}
+              suffix="€"
+              placeholder="0.50"
+              helperText="Monatliche Rücklage pro Quadratmeter"
+            />
+            <InputWithSuffix
+              label="Ziel DSCR"
+              value={formData.zielDscr}
+              onChange={(v) => updateField("zielDscr", parseFloat(v) || 0)}
+              suffix=""
+              placeholder="1.2"
+              helperText="Debt Service Coverage Ratio (Standard: 1.2)"
+            />
+          </div>
+        </FormSection>
 
         {/* Submit Button */}
         <div className="flex justify-center border-t border-border pt-6">
@@ -331,6 +545,36 @@ export function WatchlistForm() {
               label="Kaltmiete/m²" 
               value={summary.kaltmiete ? `${summary.kaltmiete.toFixed(2)} €/m²` : "—"} 
             />
+            <div className="my-3 border-t border-border" />
+            <SummaryRow 
+              label="Zielmodus" 
+              value={summary.zielmodus.type === 'nettorendite' ? 'Nettorendite' : 'Cashflow'}
+              highlight
+            />
+            {summary.zielmodus.type === 'nettorendite' ? (
+              <SummaryRow 
+                label="Ziel" 
+                value={`${summary.zielmodus.zielNettorendite}% (±${summary.zielmodus.erlaubteAbweichung}%)`} 
+              />
+            ) : (
+              <SummaryRow 
+                label="Ziel" 
+                value={`${summary.zielmodus.zielCashflow}€ (±${summary.zielmodus.erlaubteAbweichung}€)`} 
+              />
+            )}
+            <div className="my-3 border-t border-border" />
+            <SummaryRow 
+              label="Annuität (Zins + Tilgung)" 
+              value={`${summary.annuitaet.toFixed(1)}%`} 
+            />
+            <SummaryRow 
+              label="Ziel DSCR" 
+              value={summary.zielDscr.toFixed(2)} 
+            />
+            <SummaryRow 
+              label="Instandhaltung/m²" 
+              value={summary.instandhaltung ? `${summary.instandhaltung.toFixed(2)} €` : "—"} 
+            />
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
             Bitte füllen Sie alle Pflichtfelder aus, um die Watchlist zu erstellen.
@@ -347,6 +591,8 @@ export function WatchlistForm() {
             <li>Kaufnebenkosten variieren je nach Bundesland</li>
             <li>Hausgeld beeinflusst die Nettorendite</li>
             <li>Mietausfall als Sicherheitspuffer einplanen</li>
+            <li>DSCR {">"} 1.0 bedeutet positiver Cashflow</li>
+            <li>Instandhaltungsrücklage ca. 0.50-1.00 €/m²</li>
           </ul>
         </div>
       </div>

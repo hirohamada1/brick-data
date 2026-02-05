@@ -78,6 +78,75 @@ class RunService:
     watchlist_listings_table: str = "watchlist_listings"
     manual_inputs_table: str = "listing_manual_inputs"
 
+    def create_run(self, watchlist_id: str, *, status: str = "queued") -> str:
+        if not watchlist_id:
+            raise ValueError("watchlist_id must be non-empty")
+
+        watchlist = self._get_watchlist(watchlist_id)
+        if watchlist is None:
+            raise RuntimeError(f"Watchlist not found: {watchlist_id}")
+
+        sql = f"""
+            insert into {self.runs_table}
+                (user_id, watchlist_id, status)
+            values
+                (%s, %s, %s)
+            returning id;
+        """
+        params = (watchlist.get("user_id"), watchlist_id, status)
+
+        # --- psycopg2 ---
+        if psycopg2 is not None:
+            with psycopg2.connect(self.database_url) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(sql, params)
+                    row = cur.fetchone()
+                    if row and row[0]:
+                        return str(row[0])
+                    raise RuntimeError("Failed to create run")
+
+        # --- psycopg v3 fallback ---
+        if psycopg is None:
+            raise RuntimeError(
+                "No postgres driver found. Install one of:\n"
+                "  pip install psycopg2-binary\n"
+                "or\n"
+                "  pip install psycopg[binary]\n"
+            )
+
+        with psycopg.connect(self.database_url) as conn:  # type: ignore
+            with conn.cursor() as cur:
+                cur.execute(sql, params)
+                row = cur.fetchone()
+                conn.commit()
+                if row and row[0]:
+                    return str(row[0])
+                raise RuntimeError("Failed to create run")
+
+    def get_latest_run(self, watchlist_id: str) -> Optional[Dict[str, Any]]:
+        if not watchlist_id:
+            raise ValueError("watchlist_id must be non-empty")
+
+        sql = f"""
+            select id, status, started_at, finished_at, error
+            from {self.runs_table}
+            where watchlist_id = %s
+            order by started_at desc nulls last,
+                     finished_at desc nulls last,
+                     id desc
+            limit 1;
+        """
+        row = self._fetchone(sql, (watchlist_id,))
+        if not row:
+            return None
+        return {
+            "run_id": str(row[0]),
+            "status": row[1],
+            "started_at": row[2].isoformat() if row[2] is not None else None,
+            "finished_at": row[3].isoformat() if row[3] is not None else None,
+            "error": row[4],
+        }
+
     def run_watchlist(self, watchlist_id: str, run_id: str) -> Dict[str, Any]:
         if not watchlist_id:
             raise ValueError("watchlist_id must be non-empty")
@@ -257,15 +326,21 @@ class RunService:
         if exists:
             return False
 
-        hausgeld = None
+        hausgeld_umlagefaehig = None
+        hausgeld_nicht_umlagefaehig = None
         if isinstance(defaults.get("hausgeld"), dict):
             hg = defaults.get("hausgeld") or {}
             try:
-                hausgeld = float(hg.get("umlagefaehig", 0)) + float(hg.get("nichtUmlagefaehig", 0))
+                hausgeld_umlagefaehig = float(hg.get("umlagefaehig", 0))
             except Exception:
-                hausgeld = None
+                hausgeld_umlagefaehig = None
+            try:
+                hausgeld_nicht_umlagefaehig = float(hg.get("nichtUmlagefaehig", 0))
+            except Exception:
+                hausgeld_nicht_umlagefaehig = None
         elif defaults.get("hausgeld_monthly_eur") is not None:
-            hausgeld = defaults.get("hausgeld_monthly_eur")
+            hausgeld_umlagefaehig = defaults.get("hausgeld_monthly_eur")
+            hausgeld_nicht_umlagefaehig = 0
 
         sql_insert = f"""
             insert into {self.manual_inputs_table}
@@ -275,15 +350,25 @@ class RunService:
                     listing_id,
                     name,
                     search_url,
-                    hausgeld,
+                    hausgeld_umlagefaehig,
+                    hausgeld_nicht_umlagefaehig,
                     notarkosten,
                     grunderwerbssteuer,
                     grundbuchkosten,
                     mietausfall,
-                    kaltmiete_pro_qm
+                    kaltmiete_pro_qm,
+                    zielmodus,
+                    ziel_nettorendite,
+                    erlaubte_abweichung_nettorendite,
+                    ziel_cashflow,
+                    erlaubte_abweichung_cashflow,
+                    zinssatz,
+                    tilgungssatz,
+                    instandhaltung_pro_qm_monat,
+                    ziel_dscr
                 )
             values
-                (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
         params = (
             user_id,
@@ -291,12 +376,22 @@ class RunService:
             listing_id,
             watchlist_name,
             search_url,
-            hausgeld,
+            hausgeld_umlagefaehig,
+            hausgeld_nicht_umlagefaehig,
             defaults.get("notarkosten"),
             defaults.get("grunderwerbssteuer"),
             defaults.get("grundbuchkosten"),
             defaults.get("mietausfall"),
             defaults.get("kaltmieteProQm"),
+            defaults.get("zielmodus"),
+            defaults.get("zielNettorendite"),
+            defaults.get("erlaubteAbweichungNettorendite"),
+            defaults.get("zielCashflow"),
+            defaults.get("erlaubteAbweichungCashflow"),
+            defaults.get("zinssatz"),
+            defaults.get("tilgungssatz"),
+            defaults.get("instandhaltungProQmMonat"),
+            defaults.get("zielDscr"),
         )
         self._execute(sql_insert, params)
         return True
@@ -366,3 +461,11 @@ def from_env(
 
 def run_watchlist(watchlist_id: str, run_id: str) -> Dict[str, Any]:
     return from_env().run_watchlist(watchlist_id, run_id)
+
+
+def create_run(watchlist_id: str, *, status: str = "queued") -> str:
+    return from_env().create_run(watchlist_id, status=status)
+
+
+def get_latest_run(watchlist_id: str) -> Optional[Dict[str, Any]]:
+    return from_env().get_latest_run(watchlist_id)

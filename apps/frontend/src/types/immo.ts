@@ -1,4 +1,26 @@
 export type WatchlistDefaults = {
+  hausgeld: {
+    umlagefaehig: number;
+    nichtUmlagefaehig: number;
+  };
+  notarkosten: number;
+  grunderwerbssteuer: number;
+  grundbuchkosten: number;
+  mietausfall: number;
+  kaltmieteProQm: number;
+  zielmodus?: "nettorendite" | "cashflow";
+  zielNettorendite?: number;
+  erlaubteAbweichungNettorendite?: number;
+  zielCashflow?: number;
+  erlaubteAbweichungCashflow?: number;
+  zinssatz?: number;
+  tilgungssatz?: number;
+  instandhaltungProQmMonat?: number;
+  zielDscr?: number;
+};
+
+// Backwards-compatible shape (deprecated).
+export type LegacyWatchlistDefaults = {
   hausgeld_monthly_eur: number | null;
   vacancy_rate: number | null;
   maintenance_reserve_monthly_eur: number | null;

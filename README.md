@@ -31,3 +31,4 @@ immo-scan/
 1. Copy `.env.example` to `.env`.
 2. Configure your environment variables.
 3. Run `docker-compose up` to start services.
+contributor check

@@ -148,6 +148,8 @@ class RunService:
         }
 
     def run_watchlist(self, watchlist_id: str, run_id: str) -> Dict[str, Any]:
+        print("PIPELINE ENTERED", watchlist_id, run_id)
+
         if not watchlist_id:
             raise ValueError("watchlist_id must be non-empty")
         if not run_id:
@@ -215,15 +217,16 @@ class RunService:
                 ):
                     stats["linked"] += 1
 
-                if self._seed_manual_inputs_if_missing(
-                    watchlist_id=watchlist_id,
-                    listing_id=listing_id,
-                    user_id=user_id,
-                    watchlist_name=watchlist.get("name"),
-                    search_url=search_url,
-                    defaults=defaults,
-                ):
-                    stats["manual_inputs_seeded"] += 1
+                # if self._seed_manual_inputs_if_missing(
+                #     watchlist_id=watchlist_id,
+                #     listing_id=listing_id,
+                #     user_id=user_id,
+                #     watchlist_name=watchlist.get("name"),
+                #     search_url=search_url,
+                #     defaults=defaults,
+                # ):
+                #     stats["manual_inputs_seeded"] += 1
+                
 
             finished_at = _utc_now()
             self._update_run_status(

@@ -4,34 +4,46 @@ from fastapi import APIRouter, HTTPException
 
 from services.run_service import create_run, get_latest_run, run_watchlist
 
+import threading
+
+from services.run_service import from_env
+
 
 router = APIRouter()
 
+def _run_watchlist_background(watchlist_id: str, run_id: str):
+    print("BACKGROUND THREAD STARTED", watchlist_id, run_id)
 
-@router.post("/api/watchlist/{watchlist_id}/runs")
+    print("ABOUT TO CALL from_env()")
+    svc = from_env()
+    print("from_env() RETURNED", svc)
+
+    try:
+        svc.run_watchlist(watchlist_id, run_id)
+    except Exception as exc:
+        print("BACKGROUND THREAD CRASHED:", exc)
+
+
+@router.post("/api/watchlists/{watchlist_id}/runs")
 def start_pipeline_run(watchlist_id: str):
+    print("STEP A: /runs endpoint called", watchlist_id)
+
     watchlist_id = watchlist_id.strip()
     if not watchlist_id:
         raise HTTPException(status_code=400, detail="watchlist_id must be non-empty")
 
-    try:
-        run_id = create_run(watchlist_id=watchlist_id, status="queued")
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    run_id = create_run(watchlist_id=watchlist_id, status="queued")
+    print("STEP A: run row created", run_id)
 
-    try:
-        run_watchlist(watchlist_id=watchlist_id, run_id=run_id)
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "run_id": run_id,
-                "status": "failed",
-                "error": str(exc),
-            },
-        ) from exc
+    threading.Thread(
+        target=_run_watchlist_background,
+        args=(watchlist_id, run_id),
+        daemon=True,
+    ).start()
+    print("STEP A: background thread dispatched", run_id)
 
-    return {"run_id": run_id, "status": "done"}
+    return {"run_id": run_id, "status": "queued"}
+
 
 
 @router.post("/api/watchlists/{watchlist_id}/runs")

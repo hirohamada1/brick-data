@@ -5,19 +5,19 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, List, Trash2, Edit, ExternalLink } from "lucide-react"
-import type { ListingManualInputs } from "@/types/watchlist"
+import type { Watchlist } from "@/types/watchlist"
 
 // Mock data for demonstration
-const mockWatchlists: ListingManualInputs[] = [
+const mockWatchlists: Watchlist[] = [
   {
     id: "1",
     name: "München Zentrum 2-Zimmer",
     searchUrl: "https://www.immobilienscout24.de/Suche/...",
-    zielmodus: "nettorendite",
-    zielNettorendite: 4.5,
-    erlaubteAbweichungNettorendite: 0.5,
-    zielCashflow: 0,
-    erlaubteAbweichungCashflow: 0,
+    zielmodus: {
+      type: "nettorendite",
+      zielNettorendite: 4.5,
+      erlaubteAbweichung: 0.5,
+    },
     zinssatz: 4,
     tilgungssatz: 2,
     instandhaltungProQmMonat: 1.2,
@@ -34,11 +34,11 @@ const mockWatchlists: ListingManualInputs[] = [
     id: "2",
     name: "Berlin Prenzlauer Berg",
     searchUrl: "https://www.immobilienscout24.de/Suche/...",
-    zielmodus: "cashflow",
-    zielNettorendite: 0,
-    erlaubteAbweichungNettorendite: 0,
-    zielCashflow: 150,
-    erlaubteAbweichungCashflow: 25,
+    zielmodus: {
+      type: "cashflow",
+      zielCashflow: 150,
+      erlaubteAbweichung: 25,
+    },
     zinssatz: 4,
     tilgungssatz: 2,
     instandhaltungProQmMonat: 1.1,
@@ -54,7 +54,7 @@ const mockWatchlists: ListingManualInputs[] = [
 ]
 
 export default function WatchlistPage() {
-  const [watchlists] = useState<ListingManualInputs[]>(mockWatchlists)
+  const [watchlists] = useState<Watchlist[]>(mockWatchlists)
 
   return (
     <div className="space-y-6">

@@ -38,6 +38,8 @@ export interface ListingManualInputs {
     updatedAt?: string
 }
 
+export type Watchlist = ListingManualInputs
+
 export interface WatchlistFormData extends Omit<ListingManualInputs, 'id' | 'createdAt' | 'updatedAt'> { }
 
 export const DEFAULT_VALUES: WatchlistFormData = {

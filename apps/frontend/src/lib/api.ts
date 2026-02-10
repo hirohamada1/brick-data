@@ -41,6 +41,14 @@ export async function createWatchlist(payload: {
   name: string;
   search_url: string;
   defaults: WatchlistDefaults;
+  location_label?: string | null;
+  location_path?: string | null;
+  price_min?: number | null;
+  price_max?: number | null;
+  area_min?: number | null;
+  area_max?: number | null;
+  rooms_min?: number | null;
+  rooms_max?: number | null;
 }): Promise<{ id: string }> {
   return request<{ id: string }>("/api/watchlists", {
     method: "POST",

@@ -5,9 +5,8 @@ import React from "react"
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { 
-  FileText, 
-  Link as LinkIcon, 
+import {
+  FileText,
   Calculator,
   Euro,
   Info,
@@ -21,6 +20,7 @@ import {
 import { DEFAULT_VALUES, type WatchlistFormData, type ZielmodusType as Zielmodus } from "@/types/watchlist"
 import { cn } from "@/lib/utils"
 import { createWatchlist, triggerWatchlistRun } from "@/lib/api"
+import { SearchParamsSection, buildSearchUrl } from "@/components/watchlist/search-params-section"
 
 interface FormSectionProps {
   icon: React.ReactNode
@@ -55,11 +55,11 @@ interface InputWithSuffixProps {
   helperText?: string
 }
 
-function InputWithSuffix({ 
-  label, 
-  value, 
-  onChange, 
-  suffix, 
+function InputWithSuffix({
+  label,
+  value,
+  onChange,
+  suffix,
   placeholder,
   helperText
 }: InputWithSuffixProps) {
@@ -69,7 +69,7 @@ function InputWithSuffix({
       <div className="relative">
         <Input
           type="number"
-          value={value || ""}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           className="h-12 border-border bg-input pr-12 text-card-foreground placeholder:text-muted-foreground"
@@ -85,14 +85,14 @@ function InputWithSuffix({
   )
 }
 
-function SummaryRow({ 
-  label, 
-  value, 
-  highlight = false 
-}: { 
+function SummaryRow({
+  label,
+  value,
+  highlight = false
+}: {
   label: string
   value: string
-  highlight?: boolean 
+  highlight?: boolean
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -178,11 +178,11 @@ export function WatchlistForm() {
     }))
   }
 
-  const isFormValid = formData.name.trim() !== ""
+  const isFormValid = formData.name.trim() !== "" && formData.locationPath !== ""
 
   const handleSubmit = async () => {
     if (!isFormValid) return
-    
+
     setIsSubmitting(true)
     try {
       let specificDefaults;
@@ -216,10 +216,19 @@ export function WatchlistForm() {
         zielDscr: formData.zielDscr,
         ...specificDefaults,
       }
+      const generatedUrl = buildSearchUrl(formData)
       const payload = {
         name: formData.name.trim(),
-        search_url: formData.searchUrl.trim(),
+        search_url: generatedUrl,
         defaults,
+        location_label: formData.locationLabel || null,
+        location_path: formData.locationPath || null,
+        price_min: formData.priceMin,
+        price_max: formData.priceMax,
+        area_min: formData.areaMin,
+        area_max: formData.areaMax,
+        rooms_min: formData.roomsMin,
+        rooms_max: formData.roomsMax,
       }
       const created = await createWatchlist(payload)
       await triggerWatchlistRun(created.id, "full_refresh")
@@ -239,42 +248,29 @@ export function WatchlistForm() {
         <FormSection
           icon={<FileText className="h-6 w-6 text-primary" />}
           title="Grundinformationen"
-          subtitle="Name und Suchkriterien der Watchlist"
+          subtitle="Name der Watchlist"
         >
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-card-foreground">
-                Watchlist Name
-              </label>
-              <Input
-                type="text"
-                value={formData.name}
-                onChange={(e) => updateField("name", e.target.value)}
-                placeholder="z.B. München Zentrum 2-Zimmer"
-                className="h-12 border-border bg-input text-card-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-card-foreground">
-                Such-URL / Filter
-              </label>
-              <div className="relative">
-                <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  <LinkIcon className="h-4 w-4" />
-                </div>
-                <Input
-                  type="text"
-                  value={formData.searchUrl}
-                  onChange={(e) => updateField("searchUrl", e.target.value)}
-                  placeholder="https://www.immobilienscout24.de/Suche/..."
-                  className="h-12 border-border bg-input pl-10 text-card-foreground placeholder:text-muted-foreground"
-                />
-              </div>
-            </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-card-foreground">
+              Watchlist Name
+            </label>
+            <Input
+              type="text"
+              value={formData.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              placeholder="z.B. München Zentrum 2-Zimmer"
+              className="h-12 border-border bg-input text-card-foreground placeholder:text-muted-foreground"
+            />
           </div>
         </FormSection>
 
-                {/* Zielmodus */}
+        {/* Suchkriterien */}
+        <SearchParamsSection
+          formData={formData}
+          onUpdate={updateField}
+        />
+
+        {/* Zielmodus */}
         <FormSection
           icon={<Target className="h-6 w-6 text-primary" />}
           title="Zielmodus"
@@ -356,7 +352,7 @@ export function WatchlistForm() {
               </div>
             )}
           </div>
-        </FormSection> 
+        </FormSection>
 
         {/* Hausgeld */}
         <FormSection
@@ -438,8 +434,8 @@ export function WatchlistForm() {
               <div className="relative">
                 <Input
                   type="number"
-                  value={formData.kaltmieteProQm || ""}
-                  onChange={(e) => updateField("kaltmieteProQm", parseFloat(e.target.value) || 0)}
+                  value={formData.kaltmieteProQm ?? ""}
+                  onChange={(e) => updateField("kaltmieteProQm", e.target.value === "" ? 0 : parseFloat(e.target.value))}
                   placeholder="0.00"
                   className="h-12 border-border bg-input pr-16 text-card-foreground placeholder:text-muted-foreground"
                 />
@@ -453,7 +449,7 @@ export function WatchlistForm() {
             </div>
           </div>
         </FormSection>
- 
+
         {/* Finanzierung */}
         <FormSection
           icon={<TrendingUp className="h-6 w-6 text-primary" />}
@@ -528,56 +524,87 @@ export function WatchlistForm() {
           </div>
           <div className="space-y-3">
             <SummaryRow label="Watchlist Name" value={summary.name || "—"} />
-            <SummaryRow 
-              label="Kaufnebenkosten gesamt" 
-              value={`${summary.kaufnebenkosten.toFixed(1)}%`} 
-              highlight 
+            <div className="my-3 border-t border-border" />
+            <SummaryRow
+              label="Standort"
+              value={formData.locationLabel || "—"}
+              highlight
             />
-            <SummaryRow 
-              label="Hausgeld gesamt" 
-              value={`${summary.hausgeldGesamt.toFixed(2)} €/Monat`} 
+            <SummaryRow
+              label="Kaufpreis"
+              value={
+                formData.priceMin != null || formData.priceMax != null
+                  ? `${formData.priceMin?.toLocaleString("de-DE") ?? "—"} – ${formData.priceMax?.toLocaleString("de-DE") ?? "—"} €`
+                  : "—"
+              }
             />
-            <SummaryRow 
-              label="Mietausfall" 
-              value={`${summary.mietausfall}%`} 
+            <SummaryRow
+              label="Wohnfläche"
+              value={
+                formData.areaMin != null || formData.areaMax != null
+                  ? `${formData.areaMin ?? "—"} – ${formData.areaMax ?? "—"} m²`
+                  : "—"
+              }
             />
-            <SummaryRow 
-              label="Kaltmiete/m²" 
-              value={summary.kaltmiete ? `${summary.kaltmiete.toFixed(2)} €/m²` : "—"} 
+            <SummaryRow
+              label="Zimmer"
+              value={
+                formData.roomsMin != null || formData.roomsMax != null
+                  ? `${formData.roomsMin ?? "—"} – ${formData.roomsMax ?? "—"}`
+                  : "—"
+              }
             />
             <div className="my-3 border-t border-border" />
-            <SummaryRow 
-              label="Zielmodus" 
+            <SummaryRow
+              label="Kaufnebenkosten gesamt"
+              value={`${summary.kaufnebenkosten.toFixed(1)}%`}
+              highlight
+            />
+            <SummaryRow
+              label="Hausgeld gesamt"
+              value={`${summary.hausgeldGesamt.toFixed(2)} €/Monat`}
+            />
+            <SummaryRow
+              label="Mietausfall"
+              value={`${summary.mietausfall}%`}
+            />
+            <SummaryRow
+              label="Kaltmiete/m²"
+              value={summary.kaltmiete != null ? `${summary.kaltmiete.toFixed(2)} €/m²` : "—"}
+            />
+            <div className="my-3 border-t border-border" />
+            <SummaryRow
+              label="Zielmodus"
               value={summary.zielmodus.type === 'nettorendite' ? 'Nettorendite' : 'Cashflow'}
               highlight
             />
             {summary.zielmodus.type === 'nettorendite' ? (
-              <SummaryRow 
-                label="Ziel" 
-                value={`${summary.zielmodus.zielNettorendite}% (±${summary.zielmodus.erlaubteAbweichung}%)`} 
+              <SummaryRow
+                label="Ziel"
+                value={`${summary.zielmodus.zielNettorendite}% (±${summary.zielmodus.erlaubteAbweichung}%)`}
               />
             ) : (
-              <SummaryRow 
-                label="Ziel" 
-                value={`${summary.zielmodus.zielCashflow}€ (±${summary.zielmodus.erlaubteAbweichung}€)`} 
+              <SummaryRow
+                label="Ziel"
+                value={`${summary.zielmodus.zielCashflow}€ (±${summary.zielmodus.erlaubteAbweichung}€)`}
               />
             )}
             <div className="my-3 border-t border-border" />
-            <SummaryRow 
-              label="Annuität (Zins + Tilgung)" 
-              value={`${summary.annuitaet.toFixed(1)}%`} 
+            <SummaryRow
+              label="Annuität (Zins + Tilgung)"
+              value={summary.annuitaet != null ? `${summary.annuitaet.toFixed(1)}%` : "—"}
             />
-            <SummaryRow 
-              label="Ziel DSCR" 
-              value={summary.zielDscr.toFixed(2)} 
+            <SummaryRow
+              label="Ziel DSCR"
+              value={summary.zielDscr != null ? summary.zielDscr.toFixed(2) : "—"}
             />
-            <SummaryRow 
-              label="Instandhaltung/m²" 
-              value={summary.instandhaltung ? `${summary.instandhaltung.toFixed(2)} €` : "—"} 
+            <SummaryRow
+              label="Instandhaltung/m²"
+              value={summary.instandhaltung != null ? `${summary.instandhaltung.toFixed(2)} €` : "—"}
             />
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            Bitte füllen Sie alle Pflichtfelder aus, um die Watchlist zu erstellen.
+            Standort ist ein Pflichtfeld. Die Such-URL wird automatisch generiert.
           </p>
         </div>
 

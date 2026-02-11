@@ -28,12 +28,19 @@ class BrightDataUnlockerClient:
     def __init__(self, cfg: BrightDataConfig) -> None:
         self.cfg = cfg
 
-    def fetch_html(self, url: str, *, render: bool = True) -> str:
-        """
-        Returns unblocked HTML for a target URL.
-        For many sites you may need JS rendering; keep render=True for MVP.
-        """
+        timeout = httpx.Timeout(
+            connect=10.0,
+            read=120.0,
+            write=10.0,
+            pool=10.0,
+        )
+
+        self._client = httpx.Client(timeout=timeout)
+
+
+    def fetch_html(self, url: str, *, render: bool = False) -> str:
         endpoint = f"{self.cfg.base_url}/request"
+
         headers = {
             "Authorization": f"Bearer {self.cfg.api_key}",
             "Content-Type": "application/json",
@@ -43,38 +50,36 @@ class BrightDataUnlockerClient:
         payload: dict[str, Any] = {
             "zone": self.cfg.zone,
             "url": url,
-            "format": "raw",     # get raw body back
+            "format": "raw",
             "method": "GET",
         }
+
         if self.cfg.country:
             payload["country"] = self.cfg.country
 
-        # Bright Data supports browser rendering features; many integrations pass flags here.
-        # Keep this minimal; you can extend (headers, cookies, premium domains, etc.) later. :contentReference[oaicite:2]{index=2}
-        if render:
-            payload["render"] = True
+        # if render:
+        #     payload["render"] = True
 
-        with httpx.Client(timeout=self.cfg.timeout_s) as client:
-            # DEBUG: print payload
-            debug_payload = {k: v for k, v in payload.items()}
-            print(f"DEBUG: sending payload to {endpoint}: {debug_payload}")
-            r = client.post(endpoint, headers=headers, json=payload)
-            if r.status_code != 200:
-                print(f"DEBUG: Error response: {r.text}")
-            r.raise_for_status()
+        # DEBUG
+        print(f"DEBUG: sending payload to {endpoint}: {payload}")
 
-            r.raise_for_status()
+        r = self._client.post(endpoint, headers=headers, json=payload)
 
-            # DEBUG: check content type
-            ct = r.headers.get("content-type", "")
-            if "application/json" not in ct:
-                # If format=raw, we might get direct HTML
-                print(f"DEBUG: Content-Type is {ct}, returning raw text")
-                return r.text
+        if r.status_code != 200:
+            print(f"DEBUG: Error response: {r.text}")
 
-            data = r.json()
-            body = data.get("body") or data.get("response") or data.get("content")
-            if not isinstance(body, str) or not body.strip():
-                raise RuntimeError(f"Unlocker returned no HTML body. Keys: {list(data.keys())}")
+        r.raise_for_status()
 
-            return body
+        ct = r.headers.get("content-type", "")
+
+        if "application/json" not in ct:
+            print(f"DEBUG: Content-Type is {ct}, returning raw text")
+            return r.text
+
+        data = r.json()
+        body = data.get("body") or data.get("response") or data.get("content")
+
+        if not isinstance(body, str) or not body.strip():
+            raise RuntimeError(f"Unlocker returned no HTML body. Keys: {list(data.keys())}")
+
+        return body

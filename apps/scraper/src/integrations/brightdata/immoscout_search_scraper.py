@@ -34,7 +34,7 @@ class ImmoScoutSearchScraper:
           - regex match for /expose/{id}
           - dedupe while preserving numeric ids
         """
-        html = self.client.fetch_html(search_url, render=True)
+        html = self.client.fetch_html(search_url, render=False)
 
         ids: List[str] = []
         seen: Set[str] = set()
@@ -48,7 +48,7 @@ class ImmoScoutSearchScraper:
         return ids
 
 def scrape_expose_ids(self, search_url: str) -> list[str]:
-    html = self.client.fetch_html(search_url, render=True)
+    html = self.client.fetch_html(search_url, render=False)
 
     logging.info(f"Search HTML length: {len(html)}")
 

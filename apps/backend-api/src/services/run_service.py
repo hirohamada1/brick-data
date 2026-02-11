@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from storage.l0_writer import L0Writer
 from storage.l1_upserter import L1Upserter
 
 # psycopg2 (most common) OR psycopg (v3)
@@ -58,16 +57,44 @@ def _scrape_search_hits(search_url: str, *, client: Any) -> List[Any]:
     return parse_search_hits(html)
 
 
-def _scrape_expose_listing(external_id: str, expose_url: str, *, client: Any) -> Dict[str, Any]:
-    _ensure_scraper_path()
-    from mapping.immoscout_expose_mapper import map_expose_html_to_listing  # type: ignore
+def _coerce_float(value: Any) -> Optional[float]:
+    try:
+        if value is None:
+            return None
+        if isinstance(value, (int, float)):
+            return float(value)
+        return float(str(value).strip().replace(",", "."))
+    except Exception:
+        return None
 
-    html = client.fetch_html(expose_url, render=True)
-    return map_expose_html_to_listing(
-        external_id=external_id,
-        expose_url=expose_url,
-        html=html,
-    )
+
+def _get_hit_value(hit: Any, key: str) -> Any:
+    if isinstance(hit, dict):
+        return hit.get(key)
+    return getattr(hit, key, None)
+
+
+def _build_l1_listing_from_search_hit(hit: Any) -> Dict[str, Any]:
+    external_id = _get_hit_value(hit, "external_id")
+    expose_url = _get_hit_value(hit, "expose_url")
+    source = _get_hit_value(hit, "source") or "immoscout"
+
+    return {
+        "source": source,
+        "external_id": external_id,
+        "url": expose_url,
+        "title": _get_hit_value(hit, "title"),
+        "price_eur": _coerce_float(_get_hit_value(hit, "price_eur")),
+        "living_space_sqm": _coerce_float(_get_hit_value(hit, "living_space_sqm")),
+        "rooms": _coerce_float(_get_hit_value(hit, "rooms")),
+        "street": None,
+        "house_number": None,
+        "postcode": _get_hit_value(hit, "postcode"),
+        "city": _get_hit_value(hit, "city"),
+        "quarter": None,
+        "images": [],
+        "latest_l0_id": None,
+    }
 
 
 @dataclass(frozen=True)
@@ -183,7 +210,6 @@ class RunService:
             defaults = watchlist.get("defaults") or {}
             user_id = watchlist.get("user_id")
 
-            l0_writer = L0Writer(database_url=self.database_url)
             l1_upserter = L1Upserter(database_url=self.database_url)
 
             client = _get_brightdata_client()
@@ -191,17 +217,8 @@ class RunService:
             stats["total_hits"] = len(hits)
 
             for hit in hits:
-                external_id = getattr(hit, "external_id", None) or hit["external_id"]
-                expose_url = getattr(hit, "expose_url", None) or hit["expose_url"]
-
-                listing = _scrape_expose_listing(external_id, expose_url, client=client)
+                listing = _build_l1_listing_from_search_hit(hit)
                 stats["scraped"] += 1
-
-                l0_result = l0_writer.insert_expose(expose=listing)
-                if l0_result.inserted:
-                    stats["l0_inserted"] += 1
-
-                listing["latest_l0_id"] = l0_result.id
                 l1_result = l1_upserter.upsert_listing(listing=listing)
                 if l1_result.id:
                     stats["l1_upserted"] += 1

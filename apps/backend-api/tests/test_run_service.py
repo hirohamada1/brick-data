@@ -6,24 +6,9 @@ sys.path.append("apps/backend-api/src")
 import services.run_service as run_service  # type: ignore  # noqa: E402
 
 
-class _FakeL0Result:
-    def __init__(self, inserted=True, id="l0-1"):
-        self.inserted = inserted
-        self.id = id
-
-
 class _FakeL1Result:
     def __init__(self, id="l1-1"):
         self.id = id
-
-
-class _FakeL0Writer:
-    def __init__(self, *args, **kwargs):
-        self.calls = []
-
-    def insert_expose(self, *, expose):
-        self.calls.append(expose)
-        return _FakeL0Result(inserted=True, id="l0-1")
 
 
 class _FakeL1Upserter:
@@ -36,9 +21,26 @@ class _FakeL1Upserter:
 
 
 class _FakeHit:
-    def __init__(self, external_id, expose_url):
+    def __init__(
+        self,
+        external_id,
+        expose_url,
+        title=None,
+        price_eur=None,
+        living_space_sqm=None,
+        rooms=None,
+        city=None,
+        postcode=None,
+    ):
+        self.source = "immoscout"
         self.external_id = external_id
         self.expose_url = expose_url
+        self.title = title
+        self.price_eur = price_eur
+        self.living_space_sqm = living_space_sqm
+        self.rooms = rooms
+        self.city = city
+        self.postcode = postcode
 
 
 class _RecordingRunService(run_service.RunService):
@@ -78,43 +80,21 @@ class _RecordingRunService(run_service.RunService):
 
 class RunServiceTests(unittest.TestCase):
     def setUp(self):
-        self._orig_l0 = run_service.L0Writer
         self._orig_l1 = run_service.L1Upserter
         self._orig_get_client = run_service._get_brightdata_client
         self._orig_search = run_service._scrape_search_hits
-        self._orig_expose = run_service._scrape_expose_listing
 
-        run_service.L0Writer = _FakeL0Writer
         run_service.L1Upserter = _FakeL1Upserter
         run_service._get_brightdata_client = lambda: object()
         run_service._scrape_search_hits = lambda _url, client: [
-            _FakeHit("e1", "https://example.com/expose/1"),
-            _FakeHit("e2", "https://example.com/expose/2"),
+            _FakeHit("e1", "https://example.com/expose/1", title="Listing 1", price_eur=100000, living_space_sqm=50, rooms=2, city="Test", postcode="12345"),
+            _FakeHit("e2", "https://example.com/expose/2", title="Listing 2", price_eur=120000, living_space_sqm=60, rooms=3, city="Test", postcode="12345"),
         ]
-        run_service._scrape_expose_listing = (
-            lambda external_id, expose_url, client: {
-                "source": "immoscout",
-                "external_id": external_id,
-                "url": expose_url,
-                "title": "Listing",
-                "price_eur": 100000,
-                "living_space_sqm": 50,
-                "rooms": 2,
-                "street": "Main",
-                "house_number": "1",
-                "postcode": "12345",
-                "city": "Test",
-                "quarter": None,
-                "images": [],
-            }
-        )
 
     def tearDown(self):
-        run_service.L0Writer = self._orig_l0
         run_service.L1Upserter = self._orig_l1
         run_service._get_brightdata_client = self._orig_get_client
         run_service._scrape_search_hits = self._orig_search
-        run_service._scrape_expose_listing = self._orig_expose
 
     def test_run_watchlist_happy_path(self):
         service = _RecordingRunService(database_url="postgres://test")
@@ -123,10 +103,10 @@ class RunServiceTests(unittest.TestCase):
 
         self.assertEqual(stats["total_hits"], 2)
         self.assertEqual(stats["scraped"], 2)
-        self.assertEqual(stats["l0_inserted"], 2)
+        self.assertEqual(stats["l0_inserted"], 0)
         self.assertEqual(stats["l1_upserted"], 2)
         self.assertEqual(stats["linked"], 2)
-        self.assertEqual(stats["manual_inputs_seeded"], 2)
+        self.assertEqual(stats["manual_inputs_seeded"], 0)
 
         self.assertEqual(service.status_updates[0]["status"], "running")
         self.assertEqual(service.status_updates[-1]["status"], "done")

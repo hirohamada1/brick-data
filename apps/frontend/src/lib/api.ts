@@ -37,10 +37,16 @@ async function request<T>(path: string, init: RequestOptions = {}): Promise<T> {
   return JSON.parse(text) as T;
 }
 
+export async function getWatchlists(userId?: string): Promise<any[]> {
+  const url = userId ? `/api/watchlists?user_id=${userId}` : "/api/watchlists";
+  return request<any[]>(url);
+}
+
 export async function createWatchlist(payload: {
   name: string;
   search_url: string;
   defaults: WatchlistDefaults;
+  user_id?: string | null;
   location_label?: string | null;
   location_path?: string | null;
   price_min?: number | null;

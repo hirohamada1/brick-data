@@ -1,8 +1,5 @@
-"use client"
-
-import React from "react"
-
 import { useState, useMemo } from "react"
+import { useUser } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -107,7 +104,10 @@ function SummaryRow({
   )
 }
 
+
+
 export function WatchlistForm() {
+  const { user } = useUser()
   const [formData, setFormData] = useState<WatchlistFormData>(DEFAULT_VALUES)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -221,6 +221,7 @@ export function WatchlistForm() {
         name: formData.name.trim(),
         search_url: generatedUrl,
         defaults,
+        user_id: user?.id || null,
         location_label: formData.locationLabel || null,
         location_path: formData.locationPath || null,
         price_min: formData.priceMin,

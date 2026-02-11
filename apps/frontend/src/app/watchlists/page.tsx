@@ -1,60 +1,43 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useUser } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, List, Trash2, Edit, ExternalLink } from "lucide-react"
-import type { ListingManualInputs } from "@/types/watchlist"
-
-// Mock data for demonstration
-const mockWatchlists: ListingManualInputs[] = [
-  {
-    id: "1",
-    name: "München Zentrum 2-Zimmer",
-    searchUrl: "https://www.immobilienscout24.de/Suche/...",
-    zielmodus: "nettorendite",
-    zielNettorendite: 4.5,
-    erlaubteAbweichungNettorendite: 0.5,
-    zielCashflow: 0,
-    erlaubteAbweichungCashflow: 0,
-    zinssatz: 4,
-    tilgungssatz: 2,
-    instandhaltungProQmMonat: 1.2,
-    zielDscr: 1.2,
-    hausgeld: { umlagefaehig: 150, nichtUmlagefaehig: 100 },
-    notarkosten: 1.5,
-    grunderwerbssteuer: 3.5,
-    grundbuchkosten: 0.5,
-    mietausfall: 3,
-    kaltmieteProQm: 18.5,
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    name: "Berlin Prenzlauer Berg",
-    searchUrl: "https://www.immobilienscout24.de/Suche/...",
-    zielmodus: "cashflow",
-    zielNettorendite: 0,
-    erlaubteAbweichungNettorendite: 0,
-    zielCashflow: 150,
-    erlaubteAbweichungCashflow: 25,
-    zinssatz: 4,
-    tilgungssatz: 2,
-    instandhaltungProQmMonat: 1.1,
-    zielDscr: 1.2,
-    hausgeld: { umlagefaehig: 120, nichtUmlagefaehig: 80 },
-    notarkosten: 1.5,
-    grunderwerbssteuer: 6.0,
-    grundbuchkosten: 0.5,
-    mietausfall: 2,
-    kaltmieteProQm: 15.0,
-    createdAt: "2024-01-10",
-  },
-]
+import { Plus, List, Trash2, Edit, ExternalLink, Loader2 } from "lucide-react"
+import { getWatchlists } from "@/lib/api"
 
 export default function WatchlistPage() {
-  const [watchlists] = useState<ListingManualInputs[]>(mockWatchlists)
+  const { user, isLoaded: isUserLoaded } = useUser()
+  const [watchlists, setWatchlists] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadWatchlists() {
+      if (!isUserLoaded) return
+
+      try {
+        const data = await getWatchlists(user?.id)
+        setWatchlists(data)
+      } catch (error) {
+        console.error("Failed to load watchlists:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadWatchlists()
+  }, [user, isUserLoaded])
+
+  if (!isUserLoaded || isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Lade Watchlists...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -101,28 +84,28 @@ export default function WatchlistPage() {
                   <div>
                     <p className="text-muted-foreground">Kaufnebenkosten</p>
                     <p className="font-medium text-primary">
-                      {(watchlist.notarkosten + watchlist.grunderwerbssteuer + watchlist.grundbuchkosten).toFixed(1)}%
+                      {((watchlist.notarkosten || 0) + (watchlist.grunderwerbssteuer || 0) + (watchlist.grundbuchkosten || 0)).toFixed(1)}%
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Hausgeld</p>
                     <p className="font-medium text-card-foreground">
-                      {(watchlist.hausgeld.umlagefaehig + watchlist.hausgeld.nichtUmlagefaehig).toFixed(0)} €
+                      {((watchlist.defaults?.hausgeld?.umlagefaehig || 0) + (watchlist.defaults?.hausgeld?.nichtUmlagefaehig || 0)).toFixed(0)} €
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Mietausfall</p>
-                    <p className="font-medium text-card-foreground">{watchlist.mietausfall}%</p>
+                    <p className="font-medium text-card-foreground">{watchlist.mietausfall || 0}%</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Kaltmiete/m²</p>
-                    <p className="font-medium text-card-foreground">{watchlist.kaltmieteProQm} €</p>
+                    <p className="font-medium text-card-foreground">{watchlist.kaltmieteProQm || 0} €</p>
                   </div>
                 </div>
-                {watchlist.searchUrl && (
-                  <a 
-                    href={watchlist.searchUrl} 
-                    target="_blank" 
+                {watchlist.search_url && (
+                  <a
+                    href={watchlist.search_url}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
                   >

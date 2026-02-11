@@ -3,6 +3,8 @@
 .env
 .env.local
 .env.prod
+.env*
+!.env.example
 *.log
 
 node_modules/

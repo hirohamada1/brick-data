@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from services.watchlist_service import create_watchlist
+from services.watchlist_service import create_watchlist, list_watchlists
 
 
 router = APIRouter()
@@ -16,6 +16,7 @@ class WatchlistCreateIn(BaseModel):
     name: str
     search_url: str
     defaults: Dict[str, Any]
+    user_id: Optional[str] = None
     # Structured search parameters (optional for backwards compatibility)
     location_label: Optional[str] = None
     location_path: Optional[str] = None
@@ -50,6 +51,7 @@ def post_watchlist(payload: WatchlistCreateIn):
             name=name,
             search_url=search_url,
             defaults=payload.defaults,
+            user_id=payload.user_id,
             location_label=payload.location_label,
             location_path=payload.location_path,
             price_min=payload.price_min,
@@ -63,3 +65,14 @@ def post_watchlist(payload: WatchlistCreateIn):
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     return {"id": watchlist_id}
+    
+
+@router.get("/api/watchlists")
+def get_watchlists(user_id: Optional[str] = None):
+    """
+    List watchlists, optionally filtered by clerk user_id.
+    """
+    try:
+        return list_watchlists(clerk_id=user_id)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc

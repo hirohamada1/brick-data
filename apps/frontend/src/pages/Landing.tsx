@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
 import { useTheme } from "@/context/ThemeContext";
 import { Moon, Sun, TrendingUp, Bell, Home, BarChart3, Mail, ArrowRight } from "lucide-react";
@@ -84,12 +85,22 @@ export function Landing() {
               Analysiere Preisverläufe, erkenne Chancen frühzeitig und reagiere schneller als der Markt.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" className="rounded-2xl" asChild>
-                <Link href="/start">
-                  Jetzt starten
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
+              <SignedOut>
+                <SignUpButton mode="modal">
+                  <Button size="lg" className="rounded-2xl">
+                    Jetzt starten
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </SignUpButton>
+              </SignedOut>
+              <SignedIn>
+                <Button size="lg" className="rounded-2xl" asChild>
+                  <Link href="/dashboard">
+                    Zum Dashboard
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </SignedIn>
               <Button size="lg" variant="outline" className="rounded-2xl" asChild>
                 <a href="#contact">Kontakt aufnehmen</a>
               </Button>

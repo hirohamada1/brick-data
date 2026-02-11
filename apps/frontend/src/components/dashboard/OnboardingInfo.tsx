@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
 export function OnboardingInfo() {
-  const [dismissed, setDismissed] = useState(() => {
-    return localStorage.getItem("brickdata-onboarding-dismissed") === "true";
-  });
+  const [dismissed, setDismissed] = useState(true); // Default to true to avoid flash on server
+
+  useEffect(() => {
+    const isDismissed = localStorage.getItem("brickdata-onboarding-dismissed") === "true";
+    setDismissed(isDismissed);
+  }, []);
 
   const handleDismiss = () => {
     setDismissed(true);

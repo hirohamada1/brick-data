@@ -1,7 +1,16 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
+import {
+  ClerkProvider,
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs"
 import { Analytics } from "@vercel/analytics/next"
 import { Providers } from "./providers"
+import { UserSync } from "@/components/auth/UserSync"
 import "./globals.css"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" })
@@ -36,11 +45,25 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="de" className="dark" suppressHydrationWarning>
-      <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}>
-        <Providers>{children}</Providers>
-        <Analytics />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="de" className="dark" suppressHydrationWarning>
+        <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}>
+          <header className="flex items-center justify-end gap-4 border-b border-border px-6 py-3">
+            <SignedOut>
+              <SignInButton />
+              <SignUpButton />
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </header>
+          <Providers>
+            <UserSync />
+            {children}
+          </Providers>
+          <Analytics />
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

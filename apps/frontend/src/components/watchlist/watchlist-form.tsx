@@ -19,7 +19,7 @@ import {
 } from "lucide-react"
 import { DEFAULT_VALUES, type WatchlistFormData, type ZielmodusType as Zielmodus } from "@/types/watchlist"
 import { cn } from "@/lib/utils"
-import { createWatchlist, triggerWatchlistRun } from "@/lib/api"
+import { createWatchlist } from "@/lib/api"
 import { SearchParamsSection, buildSearchUrl } from "@/components/watchlist/search-params-section"
 
 interface FormSectionProps {
@@ -110,6 +110,8 @@ function SummaryRow({
 export function WatchlistForm() {
   const [formData, setFormData] = useState<WatchlistFormData>(DEFAULT_VALUES)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [createdWatchlistId, setCreatedWatchlistId] = useState<string | null>(null)
 
   const updateField = <K extends keyof WatchlistFormData>(
     field: K,
@@ -184,6 +186,8 @@ export function WatchlistForm() {
     if (!isFormValid) return
 
     setIsSubmitting(true)
+    setSubmitError(null)
+    setCreatedWatchlistId(null)
     try {
       let specificDefaults;
       if (formData.zielmodus.type === "nettorendite") {
@@ -231,10 +235,14 @@ export function WatchlistForm() {
         rooms_max: formData.roomsMax,
       }
       const created = await createWatchlist(payload)
-      await triggerWatchlistRun(created.id, "full_refresh")
-      window.location.assign(`/watchlists/${created.id}/listings`)
+      setCreatedWatchlistId(created.id)
     } catch (error) {
       console.error("Error creating watchlist:", error)
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Watchlist konnte nicht erstellt werden."
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -503,14 +511,25 @@ export function WatchlistForm() {
         </FormSection>
 
         {/* Submit Button */}
-        <div className="flex justify-center border-t border-border pt-6">
-          <Button
-            onClick={handleSubmit}
-            disabled={!isFormValid || isSubmitting}
-            className="h-12 min-w-[240px] bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            {isSubmitting ? "Wird erstellt..." : "Watchlist erstellen"}
-          </Button>
+        <div className="space-y-3 border-t border-border pt-6">
+          {createdWatchlistId ? (
+            <p className="text-sm text-green-700">
+              Watchlist erfolgreich erstellt. ID:{" "}
+              <span className="font-mono">{createdWatchlistId}</span>
+            </p>
+          ) : null}
+          {submitError ? (
+            <p className="text-sm text-destructive">{submitError}</p>
+          ) : null}
+          <div className="flex justify-center">
+            <Button
+              onClick={handleSubmit}
+              disabled={!isFormValid || isSubmitting}
+              className="h-12 min-w-[240px] bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {isSubmitting ? "Wird erstellt..." : "Watchlist erstellen"}
+            </Button>
+          </div>
         </div>
       </div>
 

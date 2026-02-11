@@ -5,14 +5,22 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, List, Trash2, Edit, ExternalLink } from "lucide-react"
-import type { Watchlist } from "@/types/watchlist"
+import type { ListingManualInputs } from "@/types/watchlist"
 
 // Mock data for demonstration
-const mockWatchlists: Watchlist[] = [
+const mockWatchlists: ListingManualInputs[] = [
   {
     id: "1",
     name: "München Zentrum 2-Zimmer",
     searchUrl: "https://www.immobilienscout24.de/Suche/...",
+    locationLabel: "Muenchen Zentrum",
+    locationPath: "bayern/muenchen",
+    priceMin: null,
+    priceMax: null,
+    areaMin: null,
+    areaMax: null,
+    roomsMin: null,
+    roomsMax: null,
     zielmodus: {
       type: "nettorendite",
       zielNettorendite: 4.5,
@@ -34,6 +42,14 @@ const mockWatchlists: Watchlist[] = [
     id: "2",
     name: "Berlin Prenzlauer Berg",
     searchUrl: "https://www.immobilienscout24.de/Suche/...",
+    locationLabel: "Berlin Prenzlauer Berg",
+    locationPath: "berlin/pankow/prenzlauer-berg",
+    priceMin: null,
+    priceMax: null,
+    areaMin: null,
+    areaMax: null,
+    roomsMin: null,
+    roomsMax: null,
     zielmodus: {
       type: "cashflow",
       zielCashflow: 150,
@@ -54,7 +70,7 @@ const mockWatchlists: Watchlist[] = [
 ]
 
 export default function WatchlistPage() {
-  const [watchlists] = useState<Watchlist[]>(mockWatchlists)
+  const [watchlists] = useState<ListingManualInputs[]>(mockWatchlists)
 
   return (
     <div className="space-y-6">
@@ -87,10 +103,18 @@ export default function WatchlistPage() {
                     {watchlist.name}
                   </CardTitle>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-card-foreground">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-card-foreground"
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -101,13 +125,22 @@ export default function WatchlistPage() {
                   <div>
                     <p className="text-muted-foreground">Kaufnebenkosten</p>
                     <p className="font-medium text-primary">
-                      {(watchlist.notarkosten + watchlist.grunderwerbssteuer + watchlist.grundbuchkosten).toFixed(1)}%
+                      {(
+                        watchlist.notarkosten +
+                        watchlist.grunderwerbssteuer +
+                        watchlist.grundbuchkosten
+                      ).toFixed(1)}
+                      %
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Hausgeld</p>
                     <p className="font-medium text-card-foreground">
-                      {(watchlist.hausgeld.umlagefaehig + watchlist.hausgeld.nichtUmlagefaehig).toFixed(0)} €
+                      {(
+                        watchlist.hausgeld.umlagefaehig +
+                        watchlist.hausgeld.nichtUmlagefaehig
+                      ).toFixed(0)}{" "}
+                      €
                     </p>
                   </div>
                   <div>
@@ -120,9 +153,9 @@ export default function WatchlistPage() {
                   </div>
                 </div>
                 {watchlist.searchUrl && (
-                  <a 
-                    href={watchlist.searchUrl} 
-                    target="_blank" 
+                  <a
+                    href={watchlist.searchUrl}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
                   >

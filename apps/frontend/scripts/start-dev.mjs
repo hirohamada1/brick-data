@@ -11,15 +11,25 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const viteBin = path.join(root, "node_modules", "vite", "bin", "vite.js");
 const apiScript = path.join(root, "server", "lead-api.js");
+const FRONTEND_PORT = Number(process.env.FRONTEND_PORT) || 3000;
+const BACKEND_PORT = Number(process.env.LEAD_API_PORT) || 3001;
 
-const vite = spawn(process.execPath, [viteBin], {
-  cwd: root,
-  stdio: "inherit",
-});
+const vite = spawn(
+  process.execPath,
+  [viteBin, "--port", String(FRONTEND_PORT), "--strictPort"],
+  {
+    cwd: root,
+    stdio: "inherit",
+  }
+);
 
 const api = spawn(process.execPath, [apiScript], {
   cwd: root,
   stdio: "inherit",
+  env: {
+    ...process.env,
+    LEAD_API_PORT: String(BACKEND_PORT),
+  },
 });
 
 function killAll() {

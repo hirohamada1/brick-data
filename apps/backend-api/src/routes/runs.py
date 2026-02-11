@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
-from services.run_service import create_run, get_latest_run, run_watchlist
+from ..services.run_service import create_run, get_latest_run, run_watchlist
 
 import threading
 
-from services.run_service import from_env
+from ..services.run_service import from_env
 
 
 router = APIRouter()

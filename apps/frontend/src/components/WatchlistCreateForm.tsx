@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createWatchlist, triggerWatchlistRun } from "@/lib/api";
+import { createWatchlist } from "@/lib/api";
 import type { WatchlistDefaults } from "@/types/immo";
 
 type FormState = {
@@ -49,6 +49,7 @@ export function WatchlistCreateForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
 
   const handleChange = (key: keyof FormState, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -109,14 +110,14 @@ export function WatchlistCreateForm() {
 
     setSubmitting(true);
     setSubmitError(null);
+    setSubmitSuccess(null);
     try {
       const created = await createWatchlist({
         name: form.name.trim(),
         search_url: form.search_url.trim(),
         defaults,
       });
-      await triggerWatchlistRun(created.id, "full_refresh");
-      window.location.assign(`/watchlists/${created.id}/listings`);
+      setSubmitSuccess(`Watchlist erstellt (ID: ${created.id})`);
     } catch (err) {
       setSubmitError(
         err instanceof Error ? err.message : "Watchlist konnte nicht erstellt werden."
@@ -221,6 +222,9 @@ export function WatchlistCreateForm() {
 
       {submitError ? (
         <div className="text-sm text-destructive">{submitError}</div>
+      ) : null}
+      {submitSuccess ? (
+        <div className="text-sm text-green-700">{submitSuccess}</div>
       ) : null}
 
       <Button type="submit" disabled={submitting}>

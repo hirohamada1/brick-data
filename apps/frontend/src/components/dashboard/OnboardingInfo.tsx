@@ -1,16 +1,25 @@
-import { useState } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
 export function OnboardingInfo() {
-  const [dismissed, setDismissed] = useState(() => {
-    return localStorage.getItem("brickdata-onboarding-dismissed") === "true";
-  });
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setDismissed(
+      window.localStorage.getItem("brickdata-onboarding-dismissed") === "true"
+    );
+  }, []);
 
   const handleDismiss = () => {
     setDismissed(true);
-    localStorage.setItem("brickdata-onboarding-dismissed", "true");
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("brickdata-onboarding-dismissed", "true");
+    }
   };
 
   if (dismissed) return null;

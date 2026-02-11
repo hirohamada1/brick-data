@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from storage.l0_writer import L0Writer
-from storage.l1_upserter import L1Upserter
+from ..storage.l0_writer import L0Writer
+from ..storage.l1_upserter import L1Upserter
 
 # psycopg2 (most common) OR psycopg (v3)
 try:

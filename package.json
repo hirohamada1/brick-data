@@ -4,6 +4,8 @@
   "scripts": {
     "postinstall": "cd apps/frontend && npm install",
     "dev": "cd apps/frontend && npm run dev",
+    "frontend-starten": "cd apps/frontend && npm run dev",
+    "backend-starten": "cd apps/backend-api && ./venv/bin/python -m uvicorn src.api:app --host 127.0.0.1 --port 3001 --reload",
     "build": "cd apps/frontend && npm run build",
     "preview": "cd apps/frontend && npm run preview",
     "lint": "cd apps/frontend && npm run lint"

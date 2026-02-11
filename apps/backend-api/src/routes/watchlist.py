@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from services.watchlist_service import create_watchlist
+from ..services.watchlist_service import create_watchlist
 
 
 router = APIRouter()

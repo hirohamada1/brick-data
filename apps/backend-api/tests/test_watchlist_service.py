@@ -1,7 +1,8 @@
 import sys
 import unittest
+from pathlib import Path
 
-sys.path.append("apps/backend-api/src")
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
 
 import services.watchlist_service as watchlist_service  # type: ignore  # noqa: E402
 

@@ -23,5 +23,5 @@ class ImmoScoutSearchScraper:
 
     def scrape(self, search_url: str) -> List[SearchHit]:
         html = self.fetch_search_html(search_url)
-        from mapping.immoscout_search_mapper import parse_search_hits
+        from scraper.mapping.immoscout_search_mapper import parse_search_hits
         return parse_search_hits(html)

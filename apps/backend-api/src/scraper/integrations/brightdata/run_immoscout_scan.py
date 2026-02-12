@@ -6,9 +6,9 @@ import json
 import httpx
 from dotenv import load_dotenv
 
-from integrations.brightdata.brightdata_client import BrightDataConfig, BrightDataUnlockerClient
-from integrations.brightdata.immoscout_search_scraper import ImmoScoutSearchScraper
-from integrations.brightdata.immoscout_expose_scraper import ImmoScoutExposeScraper
+from scraper.integrations.brightdata.brightdata_client import BrightDataConfig, BrightDataUnlockerClient
+from scraper.integrations.brightdata.immoscout_search_scraper import ImmoScoutSearchScraper
+from scraper.integrations.brightdata.immoscout_expose_scraper import ImmoScoutExposeScraper
 
 
 def post_discord(webhook_url: str, payload: dict) -> None:

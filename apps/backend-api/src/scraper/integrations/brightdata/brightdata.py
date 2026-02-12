@@ -1,10 +1,8 @@
+from __future__ import annotations
 import requests
 
-from __future__ import annotations
-from typing import Dict, Any
-
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, Dict, List
 
 class BrightDataClient:
     def __init__(self, api_key: str, zone: str):
@@ -37,7 +35,7 @@ class ImmoScoutExposeScraper:
 
     async def scrape(self, external_id: str, expose_url: str) -> Dict[str, Any]:
         html = await self.fetch_expose_html(expose_url)
-        from app.mappers.immoscout_expose_mapper import map_expose_html_to_listing
+        from scraper.mapping.immoscout_expose_mapper import map_expose_html_to_listing
         return map_expose_html_to_listing(
             external_id=external_id,
             expose_url=expose_url,
@@ -61,5 +59,5 @@ class ImmoScoutSearchScraper:
 
     async def scrape(self, search_url: str) -> List[SearchHit]:
         html = await self.fetch_search_html(search_url)
-        from app.mappers.immoscout_search_mapper import parse_search_hits
+        from scraper.mapping.immoscout_search_mapper import parse_search_hits
         return parse_search_hits(html)

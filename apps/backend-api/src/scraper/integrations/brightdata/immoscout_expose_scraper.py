@@ -7,9 +7,9 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from integrations.brightdata.brightdata_client import BrightDataUnlockerClient
-from models.listing import Listing
-from targets.immoscout.map import map_listing
+from scraper.integrations.brightdata.brightdata_client import BrightDataUnlockerClient
+from scraper.models.listing import Listing
+from scraper.targets.immoscout.map import map_listing
 
 from pprint import pformat
 

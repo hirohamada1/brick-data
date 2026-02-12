@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import sys
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -29,16 +28,8 @@ def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _ensure_scraper_path() -> None:
-    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
-    scraper_src = os.path.join(repo_root, "apps", "scraper", "src")
-    if scraper_src not in sys.path:
-        sys.path.append(scraper_src)
-
-
 def _get_brightdata_client():
-    _ensure_scraper_path()
-    from integrations.brightdata.brightdata_client import (  # type: ignore
+    from scraper.integrations.brightdata.brightdata_client import (  # type: ignore
         BrightDataConfig,
         BrightDataUnlockerClient,
     )
@@ -50,8 +41,7 @@ def _get_brightdata_client():
 
 
 def _scrape_search_hits(search_url: str, *, client: Any) -> List[Any]:
-    _ensure_scraper_path()
-    from mapping.immoscout_search_mapper import parse_search_hits  # type: ignore
+    from scraper.mapping.immoscout_search_mapper import parse_search_hits  # type: ignore
 
     html = client.fetch_html(search_url, render=True)
     return parse_search_hits(html)

@@ -10,7 +10,7 @@ class ImmoScoutExposeScraper:
 
     async def scrape(self, external_id: str, expose_url: str) -> Dict[str, Any]:
         html = await self.fetch_expose_html(expose_url)
-        from mapping.immoscout_expose_mapper import map_expose_html_to_listing
+        from scraper.mapping.immoscout_expose_mapper import map_expose_html_to_listing
         return map_expose_html_to_listing(
             external_id=external_id,
             expose_url=expose_url,

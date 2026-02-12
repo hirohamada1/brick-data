@@ -2,20 +2,16 @@ import os
 import asyncio
 import sys
 
-# Ensure apps/scraper/src is on sys.path when running this script directly.
+# Ensure backend-api/src is on sys.path when running this script directly.
 _script_dir = os.path.dirname(os.path.abspath(__file__))
-_scraper_src = os.path.abspath(os.path.join(_script_dir, "..", "src"))
-if _scraper_src not in sys.path:
-    sys.path.insert(0, _scraper_src)
-from dotenv import load_dotenv
-from integrations.brightdata.brightdata_async import BrightDataClient, BrightDataConfig
-from scrapers.immoscout_search_scraper import ImmoScoutSearchScraper
-from scrapers.immoscout_expose_scraper import ImmoScoutExposeScraper
-from integrations.storage.l0_writer import from_env as l0_from_env
-from integrations.storage.l1_upserter import from_env as l1_from_env
-
-# Load .env from project root
-base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_backend_src = os.path.abspath(os.path.join(_script_dir, ".."))
+if _backend_src not in sys.path:
+    sys.path.insert(0, _backend_src)
+from scraper.integrations.brightdata.brightdata_async import BrightDataClient, BrightDataConfig
+from scraper.scrapers.immoscout_search_scraper import ImmoScoutSearchScraper
+from scraper.scrapers.immoscout_expose_scraper import ImmoScoutExposeScraper
+from storage.l0_writer import from_env as l0_from_env
+from storage.l1_upserter import from_env as l1_from_env
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -55,7 +51,7 @@ async def main():
     l1_upserter = l1_from_env()
 
     search_url = "https://www.immobilienscout24.de/Suche/de/sachsen-anhalt/magdeburg/wohnung-kaufen"
-    hits = await search_scraper.scrape(search_url)
+    hits = search_scraper.scrape(search_url)
     hits = hits[:3]
 
     print(f"Found {len(hits)} expose links")

@@ -3,12 +3,16 @@ from __future__ import annotations
 
 import os
 import logging
+import sys
+from pathlib import Path
 print("DEBUG: Script started")
 from pprint import pprint
 
-from integrations.brightdata.brightdata_client import BrightDataConfig, BrightDataUnlockerClient
-from integrations.brightdata.immoscout_search_scraper import ImmoScoutSearchScraper
-from integrations.brightdata.immoscout_expose_scraper import ImmoScoutExposeScraper
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+
+from scraper.integrations.brightdata.brightdata_client import BrightDataConfig, BrightDataUnlockerClient
+from scraper.integrations.brightdata.immoscout_search_scraper import ImmoScoutSearchScraper
+from scraper.integrations.brightdata.immoscout_expose_scraper import ImmoScoutExposeScraper
 
 
 logging.basicConfig(
@@ -56,7 +60,7 @@ def main() -> None:
         logging.info(f"Scraping expose {expose_id}")
 
         try:
-            listing = expose_scraper.scrape_expose(expose_id)
+            listing, _html = expose_scraper.scrape_expose(expose_id)
 
             logging.info("Mapped Listing object:")
             pprint(listing.__dict__)  # or model_dump()

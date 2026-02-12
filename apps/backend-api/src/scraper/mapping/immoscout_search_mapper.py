@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from typing import List
-from scrapers.immoscout_search_scraper import SearchHit
+from scraper.mapping.number_parsing import parse_german_number, parse_price_eur
+from scraper.scrapers.immoscout_search_scraper import SearchHit
 
 def parse_search_hits(html: str) -> List[SearchHit]:
     soup = BeautifulSoup(html, "html.parser")
@@ -31,13 +32,18 @@ def parse_search_hits(html: str) -> List[SearchHit]:
         rooms_el = card.select_one("[data-qa='rooms']")
         rooms = rooms_el.get_text(strip=True) if rooms_el else None
 
-        hits.append({
-            "external_id": external_id,
-            "url": expose_url,
-            "title": title,
-            "price": price,
-            "living_space": sqm,
-            "rooms": rooms,
-        })
+        hits.append(
+            SearchHit(
+                source="immoscout",
+                external_id=external_id,
+                expose_url=expose_url,
+                title=title,
+                price_eur=parse_price_eur(price),
+                living_space_sqm=parse_german_number(sqm),
+                rooms=parse_german_number(rooms),
+                city=None,
+                postcode=None,
+            )
+        )
 
     return hits

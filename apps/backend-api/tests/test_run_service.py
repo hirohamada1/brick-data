@@ -1,7 +1,8 @@
 import sys
 import unittest
+from pathlib import Path
 
-sys.path.append("apps/backend-api/src")
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
 
 import services.run_service as run_service  # type: ignore  # noqa: E402
 

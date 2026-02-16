@@ -7,7 +7,7 @@ console.log("MIDDLEWARE FILE LOADED");
 
 //Funktion die true zurückgibt, wenn die URL zu einer Liste von Mustern passt (public routes).
 const isPublicRoute = createRouteMatcher([
-    // "/", das greift noch nicht bisher muss sich drt immer direkt angemeldet werden. 
+    "/",
     "/start(.*)",
     "/impressum(.*)",
     "/datenschutz(.*)",

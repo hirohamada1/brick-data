@@ -1,6 +1,8 @@
 # General
 .DS_Store
 .env
+.env.staging
+.env.test
 .env.local
 .env.prod
 *.log

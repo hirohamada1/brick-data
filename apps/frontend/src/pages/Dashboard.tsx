@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 
 import { Home, Bell, Download, Plus, Sparkles } from "lucide-react";
@@ -24,6 +24,9 @@ export function Dashboard() {
 
   // Hier wird sichergestellt, dass der Request nur einmal gesendet wird. Ist wie ein Speicherplatz der sich die Session merkt
   const ensureHasRunRef = useRef(false);
+
+  // State für die User-Daten aus der Datenbank
+  const [userData, setUserData] = useState<any>(null);
 
   // Seite im Browser lädt, wenn Clerk noch läft oder de User noch nicht eingeloggt ist bricht es ab 
   useEffect(() => {
@@ -67,6 +70,11 @@ export function Dashboard() {
         // Wenn der Request erfolgreich ist, anzeigen 
         const json = await res.json();
         console.log("[ensure_user] ok:", json);
+
+        // Daten im State speichern, damit wir sie im UI anzeigen können
+        if (json.user?.db_row) {
+          setUserData(json.user.db_row);
+        }
       } catch (err) {
         if ((err as any)?.name === "AbortError") {
           console.error("[ensure_user] timed out");
@@ -91,6 +99,16 @@ export function Dashboard() {
           Übersicht über Immobilien-Daten und Signals
         </p>
       </div>
+
+      {/* User DB ID Anzeige */}
+      {userData && (
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="text-sm text-muted-foreground">
+            <span className="font-medium">Online: Supabase ID</span>{" "}
+            <code className="bg-muted px-2 py-0.5 rounded">{userData.id}</code>
+          </div>
+        </div>
+      )}
 
       <OnboardingInfo />
 

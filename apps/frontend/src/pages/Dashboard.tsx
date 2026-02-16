@@ -1,11 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import {
-  Home,
-  Bell,
-  Download,
-  Plus,
-  Sparkles,
-} from "lucide-react";
+import { useEffect, useRef } from "react";
+import { useAuth } from "@clerk/nextjs";
+
+import { Home, Bell, Download, Plus, Sparkles } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { getKPIs } from "@/data/mock";
 import { formatCurrency } from "@/lib/utils";
@@ -20,6 +19,70 @@ export function Dashboard() {
   const { simulateNewListing, listings, watchlists } = useApp();
   const kpis = getKPIs(listings, watchlists);
 
+  // Hier werden die Daten von Clerk geholt.
+  const { isLoaded, isSignedIn, getToken } = useAuth();
+
+  // Hier wird sichergestellt, dass der Request nur einmal gesendet wird. Ist wie ein Speicherplatz der sich die Session merkt
+  const ensureHasRunRef = useRef(false);
+
+  // Seite im Browser lädt, wenn Clerk noch läft oder de User noch nicht eingeloggt ist bricht es ab 
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+
+    if (ensureHasRunRef.current) return;
+    ensureHasRunRef.current = true;
+
+    // Connection zum Backend, entweder aus env oder "http://127.0.0.1:3001"
+    const ensureUser = async () => {
+      const backendUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ||
+        "http://127.0.0.1:3001";
+
+
+      // Clerk soll neuen JWT geben, da wir eineloggt sind, wenn nicht im Terminal anzeigen 
+      const token = await getToken();
+      if (!token) {
+        console.warn("[ensure_user] No Clerk token available");
+        return;
+      }
+
+      // Maximale Zeit für den Request sind 8 Sekunden
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
+      // Hier wird der Request an den Backend gesendet.
+      try {
+        const res = await fetch(`${backendUrl}/api/users/ensure`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        });
+
+        // Wenn der Request nicht erfolgreich ist, anzeigen 
+        if (!res.ok) {
+          const text = await res.text();
+          console.error("[ensure_user] failed:", res.status, text);
+          return;
+        }
+        // Wenn der Request erfolgreich ist, anzeigen 
+        const json = await res.json();
+        console.log("[ensure_user] ok:", json);
+      } catch (err) {
+        if ((err as any)?.name === "AbortError") {
+          console.error("[ensure_user] timed out");
+        } else {
+          console.error("[ensure_user] error:", err);
+        }
+      } finally {
+        clearTimeout(timeout);
+      }
+    };
+
+    //  Neustarten wenn sich einer dieser drei Werte ändert.
+    void ensureUser();
+  }, [isLoaded, isSignedIn, getToken]);
+
+  // ✅ WICHTIG: JSX Return -> sonst ist die Funktion "void"
   return (
     <div className="space-y-8">
       <div>
@@ -36,20 +99,23 @@ export function Dashboard() {
           <Sparkles className="h-4 w-4 mr-2" />
           Simuliere neues Listing
         </Button>
+
         <Button variant="outline" size="lg" asChild>
-          <Link href="/alerts">
+          <Link href="/Alerts">
             <Plus className="h-4 w-4 mr-2" />
             Neue Watchlist
           </Link>
         </Button>
+
         <Button variant="outline" size="lg" asChild>
-          <Link href="/alerts">
+          <Link href="/Alerts">
             <Bell className="h-4 w-4 mr-2" />
             Alert erstellen
           </Link>
         </Button>
+
         <Button variant="outline" size="lg" asChild>
-          <Link href="/listings">
+          <Link href="/Listings">
             <Download className="h-4 w-4 mr-2" />
             Listing importieren
           </Link>

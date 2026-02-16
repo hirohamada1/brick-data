@@ -7,6 +7,7 @@ console.log("MIDDLEWARE FILE LOADED");
 
 //Funktion die true zurückgibt, wenn die URL zu einer Liste von Mustern passt (public routes).
 const isPublicRoute = createRouteMatcher([
+    // "/", das greift noch nicht bisher muss sich drt immer direkt angemeldet werden. 
     "/start(.*)",
     "/impressum(.*)",
     "/datenschutz(.*)",
@@ -17,6 +18,8 @@ const isPublicRoute = createRouteMatcher([
 //Wenn jemand z.B. Dashboard aufruft dann für next.js middleware.ts aus bevor die Seite gerendert wird 
 //Clerk liest daraus die Auth Infos 
 //Wenn Berechtigung da ist dann gehts weiter sonst zurück
+
+// clerkMiddleware ist von Clerk vordefiniert
 export default clerkMiddleware(async (auth, req) => {
     console.log("MIDDLEWARE HIT:", req.nextUrl.pathname);
 

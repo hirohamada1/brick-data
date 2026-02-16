@@ -26,6 +26,8 @@ export const metadata: Metadata = {
 };
 
 // RootLayout. Hier definieren wir das Grundgerüst der Seite. Hier werden die Fonts, ClerkProvider, Analytics und Providers geladen.
+//Um die ganze App kommt das Sicherheitskonzept von Clerk.(Ohne das wüsste keine Seite ob ein Nutzer angemeldet oder nicht ist)
+// Analytics ist von Vercel und trackt Pageviews etc.
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>

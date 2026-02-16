@@ -176,13 +176,29 @@ def ensure_user_from_clerk(clerk_jwt: str) -> dict[str, Any]:
     if not clerk_user_id:
         raise ValueError("JWT payload missing sub")
 
-    # Hinweis: User-Metadaten (Name, Email) holen wir jetzt von der Clerk API
-    metadata = _fetch_user_metadata_from_clerk(clerk_user_id)
-
-    # 3) DB Upsert ausführen
+    # DUAL-MODE STRATEGIE:
+    # 1) Erst prüfen, ob User schon in DB existiert (durch Webhook angelegt)
+    # 2) Falls NICHT -> API-Call als Fallback (für Legacy-User oder Webhook-Ausfälle)
+    
     with _db_conn() as conn:
-        # RealDictCursor macht aus rows dicts statt tuples
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Schritt 1: Schauen ob User existiert
+            cur.execute(
+                "SELECT * FROM public.users WHERE clerk_id = %s",
+                (clerk_user_id,)
+            )
+            existing_user = cur.fetchone()
+            
+            # Schritt 2a: User existiert bereits (durch Webhook angelegt)
+            if existing_user:
+                print(f"[ensure_user] User found in DB (webhook): {clerk_user_id}")
+                return {"clerk_id": clerk_user_id, "db_row": existing_user}
+            
+            # Schritt 2b: User existiert NICHT -> API-Fallback
+            print(f"[ensure_user] User NOT in DB, fetching from Clerk API (fallback)")
+            metadata = _fetch_user_metadata_from_clerk(clerk_user_id)
+            
+            # In DB eintragen
             cur.execute(
                 """
                 INSERT INTO public.users (clerk_id, first_name, last_name, email)

@@ -106,6 +106,49 @@ def _verify_clerk_jwt(token: str) -> dict[str, Any]:
     return payload
 
 
+def _fetch_user_metadata_from_clerk(clerk_user_id: str) -> dict[str, Any]:
+    """
+    Holt die vollständigen User-Daten (Name, Email) von der Clerk Backend API.
+    
+    Diese Funktion wird nach erfolgreicher JWT-Verifizierung aufgerufen,
+    um Informationen zu erhalten, die nicht im Token enthalten sind.
+    """
+    secret_key = _get_env("CLERK_SECRET_KEY")
+    
+    # Clerk Backend API Endpoint
+    url = f"https://api.clerk.com/v1/users/{clerk_user_id}"
+    
+    # Authorization Header mit Secret Key
+    headers = {
+        "Authorization": f"Bearer {secret_key}",
+        "Content-Type": "application/json"
+    }
+    
+    # API Request
+    res = requests.get(url, headers=headers, timeout=10)
+    res.raise_for_status()  
+    
+    user_data = res.json()
+    
+    # Email extrahieren (Clerk gibt eine Liste zurück, wir nehmen die erste)
+    email = None
+    if user_data.get("email_addresses"):
+        # Primäre Email oder erste in der Liste
+        for email_obj in user_data["email_addresses"]:
+            if email_obj.get("id") == user_data.get("primary_email_address_id"):
+                email = email_obj.get("email_address")
+                break
+        # Fallback: erste Email
+        if not email and user_data["email_addresses"]:
+            email = user_data["email_addresses"][0].get("email_address")
+    
+    return {
+        "first_name": user_data.get("first_name"),
+        "last_name": user_data.get("last_name"),
+        "email": email
+    }
+
+
 
 def _db_conn():
 
@@ -133,12 +176,8 @@ def ensure_user_from_clerk(clerk_jwt: str) -> dict[str, Any]:
     if not clerk_user_id:
         raise ValueError("JWT payload missing sub")
 
-    # Hinweis:
-    # Email ist im JWT oft NICHT drin.
-    # Für MVP reicht: clerk_id speichern.
-    # Später kannst du:
-    # - Clerk Backend API callen um Email/Name zu holen
-    # - oder Webhooks nutzen (production standard)
+    # Hinweis: User-Metadaten (Name, Email) holen wir jetzt von der Clerk API
+    metadata = _fetch_user_metadata_from_clerk(clerk_user_id)
 
     # 3) DB Upsert ausführen
     with _db_conn() as conn:
@@ -146,13 +185,21 @@ def ensure_user_from_clerk(clerk_jwt: str) -> dict[str, Any]:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """
-                INSERT INTO public.users (clerk_id)
-                VALUES (%s)
+                INSERT INTO public.users (clerk_id, first_name, last_name, email)
+                VALUES (%s, %s, %s, %s)
                 ON CONFLICT (clerk_id)
-                DO UPDATE SET clerk_id = EXCLUDED.clerk_id
+                DO UPDATE SET 
+                    first_name = EXCLUDED.first_name,
+                    last_name = EXCLUDED.last_name,
+                    email = EXCLUDED.email
                 RETURNING *;
                 """,
-                (clerk_user_id,),
+                (
+                    clerk_user_id,
+                    metadata.get("first_name"),
+                    metadata.get("last_name"),
+                    metadata.get("email")
+                ),
             )
             row = cur.fetchone()
 

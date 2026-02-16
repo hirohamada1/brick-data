@@ -1,0 +1,131 @@
+delta_detection:
+
+  description: >
+    Compares two normalized L1 listings and produces a deterministic delta object.
+    Used to detect material changes and trigger version updates.
+
+  ####################################################################
+  # 1️⃣  Fields compared
+  ####################################################################
+
+  fields_to_compare:
+    - price
+    - area
+    - rooms
+
+  numeric_fields:
+    - price
+    - area
+    - rooms
+
+  ####################################################################
+  # 2️⃣  Change Detection Rules
+  ####################################################################
+
+  change_rules:
+
+    price:
+      create_diff: true
+      create_flag: true
+      diff_field: price_diff
+      flag_field: price_changed
+
+    area:
+      create_diff: true
+      create_flag: true
+      diff_field: area_diff
+      flag_field: area_changed
+
+    rooms:
+      create_diff: true
+      create_flag: true
+      diff_field: rooms_diff
+      flag_field: rooms_changed
+
+  any_changes_field: any_changes
+
+  create_new_version_if_changed: true
+
+
+  ####################################################################
+  # 3️⃣  Invariants (must always hold true)
+  ####################################################################
+
+  invariants:
+
+    idempotent_when_equal: true
+
+    no_nan_values: true
+
+    no_missing_diff_fields: true
+
+    negative_diffs_allowed: true   # price drop is valid
+
+    flags_must_match_diffs: true   # if diff != 0 → changed must be true
+
+
+  ####################################################################
+  # 4️⃣  Default Handling Rules
+  ####################################################################
+
+  null_handling:
+
+    treat_null_as_no_change: true
+    treat_missing_fields_as_error: true
+
+
+  ####################################################################
+  # 5️⃣  Output Structure Specification
+  ####################################################################
+
+  output_format:
+
+    required_fields:
+      - price_diff
+      - area_diff
+      - rooms_diff
+      - price_changed
+      - area_changed
+      - rooms_changed
+      - any_changes
+
+    field_types:
+
+      price_diff: integer
+      area_diff: integer
+      rooms_diff: integer
+
+      price_changed: boolean
+      area_changed: boolean
+      rooms_changed: boolean
+      any_changes: boolean
+
+
+  ####################################################################
+  # 6️⃣  Determinism Requirements
+  ####################################################################
+
+  determinism:
+
+    must_be_pure_function: true
+    must_not_mutate_inputs: true
+    must_not_access_database: true
+    same_input_same_output: true
+
+
+  ####################################################################
+  # 7️⃣  Testing Requirements
+  ####################################################################
+
+  test_requirements:
+
+    unit_tests_required: true
+    property_tests_required: true
+
+    property_tests:
+      - identical_input_produces_no_change
+      - no_nan_generated
+      - diff_matches_value_difference
+      - changed_flags_match_diff
+      - negative_price_allowed
+      - deterministic_repeated_calls

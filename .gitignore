@@ -1,5 +1,7 @@
 # General
 .DS_Store
+
+#ENV
 .env.staging
 .env.test
 .env.local

@@ -116,7 +116,7 @@ export function WatchlistCreateForm() {
         defaults,
       });
       await triggerWatchlistRun(created.id, "full_refresh");
-      window.location.assign(`/watchlists/${created.id}/listings`);
+      window.location.assign("/listings");
     } catch (err) {
       setSubmitError(
         err instanceof Error ? err.message : "Watchlist konnte nicht erstellt werden."

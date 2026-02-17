@@ -110,6 +110,7 @@ function SummaryRow({
 export function WatchlistForm() {
   const [formData, setFormData] = useState<WatchlistFormData>(DEFAULT_VALUES)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const updateField = <K extends keyof WatchlistFormData>(
     field: K,
@@ -178,12 +179,22 @@ export function WatchlistForm() {
     }))
   }
 
-  const isFormValid = formData.name.trim() !== ""
+  const isHttpUrl = (value: string): boolean => {
+    try {
+      const parsed = new URL(value)
+      return parsed.protocol === "http:" || parsed.protocol === "https:"
+    } catch {
+      return false
+    }
+  }
+
+  const isFormValid = formData.name.trim() !== "" && isHttpUrl(formData.searchUrl.trim())
 
   const handleSubmit = async () => {
     if (!isFormValid) return
-    
+
     setIsSubmitting(true)
+    setSubmitError(null)
     try {
       let specificDefaults;
       if (formData.zielmodus.type === "nettorendite") {
@@ -223,9 +234,10 @@ export function WatchlistForm() {
       }
       const created = await createWatchlist(payload)
       await triggerWatchlistRun(created.id, "full_refresh")
-      window.location.assign(`/watchlists/${created.id}/listings`)
+      window.location.assign("/listings")
     } catch (error) {
       console.error("Error creating watchlist:", error)
+      setSubmitError(error instanceof Error ? error.message : "Watchlist konnte nicht erstellt werden.")
     } finally {
       setIsSubmitting(false)
     }
@@ -508,13 +520,18 @@ export function WatchlistForm() {
 
         {/* Submit Button */}
         <div className="flex justify-center border-t border-border pt-6">
-          <Button
-            onClick={handleSubmit}
-            disabled={!isFormValid || isSubmitting}
-            className="h-12 min-w-[240px] bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            {isSubmitting ? "Wird erstellt..." : "Watchlist erstellen"}
-          </Button>
+          <div className="space-y-2">
+            <Button
+              onClick={handleSubmit}
+              disabled={!isFormValid || isSubmitting}
+              className="h-12 min-w-[240px] bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {isSubmitting ? "Wird erstellt..." : "Watchlist erstellen"}
+            </Button>
+            {submitError ? (
+              <p className="text-center text-xs text-destructive">{submitError}</p>
+            ) : null}
+          </div>
         </div>
       </div>
 

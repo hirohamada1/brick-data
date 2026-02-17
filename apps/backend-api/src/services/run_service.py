@@ -29,22 +29,22 @@ def _utc_now() -> datetime:
 
 
 def _get_brightdata_client():
-    from scraper.integrations.brightdata.brightdata_client import (  # type: ignore
-        BrightDataConfig,
-        BrightDataUnlockerClient,
-    )
+    from scraper.integrations.brightdata.brightdata import BrightDataClient  # type: ignore
 
-    cfg = BrightDataConfig()
-    if not cfg.api_key:
+    api_key = os.getenv("BRIGHTDATA_API_KEY", "").strip()
+    if not api_key:
         raise RuntimeError("BRIGHTDATA_API_KEY not set")
-    return BrightDataUnlockerClient(cfg)
+
+    zone = os.getenv("BRIGHTDATA_ZONE", "immo_scan1").strip() or "immo_scan1"
+    return BrightDataClient(api_key=api_key, zone=zone)
 
 
 def _scrape_search_hits(search_url: str, *, client: Any) -> List[Any]:
-    from scraper.mapping.immoscout_search_mapper import parse_search_hits  # type: ignore
+    from scraper.scraper import IS24SearchResultScraper  # type: ignore
 
-    html = client.fetch_html(search_url, render=True)
-    return parse_search_hits(html)
+    scraper = IS24SearchResultScraper(client=client)
+    listings, _pages = scraper.scrape_all_listings(search_url)
+    return listings
 
 
 def _coerce_float(value: Any) -> Optional[float]:
@@ -58,6 +58,19 @@ def _coerce_float(value: Any) -> Optional[float]:
         return None
 
 
+def _coerce_int(value: Any) -> Optional[int]:
+    try:
+        if value is None or isinstance(value, bool):
+            return None
+        if isinstance(value, int):
+            return value
+        if isinstance(value, float):
+            return int(value)
+        return int(float(str(value).strip().replace(",", ".")))
+    except Exception:
+        return None
+
+
 def _get_hit_value(hit: Any, key: str) -> Any:
     if isinstance(hit, dict):
         return hit.get(key)
@@ -65,8 +78,15 @@ def _get_hit_value(hit: Any, key: str) -> Any:
 
 
 def _build_l1_listing_from_search_hit(hit: Any) -> Dict[str, Any]:
+    listing_id = _coerce_int(_get_hit_value(hit, "listing_id"))
     external_id = _get_hit_value(hit, "external_id")
+    if not external_id and listing_id is not None:
+        external_id = str(listing_id)
+
     expose_url = _get_hit_value(hit, "expose_url")
+    if not expose_url and listing_id is not None:
+        expose_url = f"https://www.immobilienscout24.de/expose/{listing_id}"
+
     source = _get_hit_value(hit, "source") or "immoscout"
 
     return {
@@ -77,11 +97,11 @@ def _build_l1_listing_from_search_hit(hit: Any) -> Dict[str, Any]:
         "price_eur": _coerce_float(_get_hit_value(hit, "price_eur")),
         "living_space_sqm": _coerce_float(_get_hit_value(hit, "living_space_sqm")),
         "rooms": _coerce_float(_get_hit_value(hit, "rooms")),
-        "street": None,
-        "house_number": None,
+        "street": _get_hit_value(hit, "street"),
+        "house_number": _get_hit_value(hit, "house_number"),
         "postcode": _get_hit_value(hit, "postcode"),
         "city": _get_hit_value(hit, "city"),
-        "quarter": None,
+        "quarter": _get_hit_value(hit, "quarter"),
         "images": [],
         "latest_l0_id": None,
     }
@@ -197,7 +217,6 @@ class RunService:
                 raise RuntimeError(f"Watchlist not found: {watchlist_id}")
 
             search_url = watchlist["search_url"]
-            defaults = watchlist.get("defaults") or {}
             user_id = watchlist.get("user_id")
 
             l1_upserter = L1Upserter(database_url=self.database_url)

@@ -22,7 +22,17 @@ export type ZielmodusConfig =
 export interface ListingManualInputs {
     id?: string
     name: string // Watchlist name
-    searchUrl: string // Search URL / Filter
+    searchUrl: string // Auto-generated ImmobilienScout24 URL
+    // Structured search parameters
+    locationLabel: string // Display name, e.g. "Magdeburg"
+    locationPath: string // IS24 URL path, e.g. "sachsen-anhalt/magdeburg"
+    priceMin: number | null
+    priceMax: number | null
+    areaMin: number | null
+    areaMax: number | null
+    roomsMin: number | null
+    roomsMax: number | null
+    // Investment parameters
     zielmodus: ZielmodusConfig
     zinssatz: number
     tilgungssatz: number
@@ -45,6 +55,14 @@ export interface WatchlistFormData extends Omit<ListingManualInputs, 'id' | 'cre
 export const DEFAULT_VALUES: WatchlistFormData = {
     name: '',
     searchUrl: '',
+    locationLabel: '',
+    locationPath: '',
+    priceMin: null,
+    priceMax: null,
+    areaMin: null,
+    areaMax: null,
+    roomsMin: null,
+    roomsMax: null,
     zielmodus: {
         type: "nettorendite",
         zielNettorendite: 5,

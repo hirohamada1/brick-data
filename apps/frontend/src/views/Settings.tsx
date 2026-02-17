@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "next-themes";
 import { User, Bell, Database, Sun, Moon } from "lucide-react";
 
 export default function Settings() {

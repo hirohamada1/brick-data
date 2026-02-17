@@ -55,7 +55,7 @@ const SOURCE_OPTIONS: { value: ListingSource; label: string }[] = [
 export default function Listings() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const openId = searchParams.get("open");
+  const openId = searchParams?.get("open");
   const {
     listings,
     watchlists,
@@ -104,10 +104,13 @@ export default function Listings() {
   );
 
   const setOpenParam = (value: string | null) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+
     if (value) params.set("open", value);
     else params.delete("open");
+
     const next = params.toString();
+
     router.replace(next ? `/listings?${next}` : "/listings", { scroll: false });
   };
 
@@ -168,10 +171,10 @@ export default function Listings() {
       status === "new"
         ? "default"
         : status === "watching"
-        ? "success"
-        : status === "offer"
-        ? "warning"
-        : "secondary";
+          ? "success"
+          : status === "offer"
+            ? "warning"
+            : "secondary";
     const label =
       STATUS_OPTIONS.find((s) => s.value === status)?.label ?? status;
     return <Badge variant={v}>{label}</Badge>;
@@ -510,8 +513,8 @@ export default function Listings() {
                           {s.type === "price_drop"
                             ? "Preissenkung"
                             : s.type === "relist"
-                            ? "Relisting"
-                            : "Erstellt"}
+                              ? "Relisting"
+                              : "Erstellt"}
                         </span>
                         <span>{formatDate(s.date)}</span>
                         {s.oldPrice && s.newPrice && (

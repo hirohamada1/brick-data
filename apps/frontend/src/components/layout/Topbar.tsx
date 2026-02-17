@@ -1,11 +1,12 @@
 "use client";
 
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Topbar() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
   return (
     <header className="fixed left-64 right-0 top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background px-8">

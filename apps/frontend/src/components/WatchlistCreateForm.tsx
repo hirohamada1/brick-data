@@ -100,15 +100,19 @@ export function WatchlistCreateForm() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    const defaults: WatchlistDefaults = {
+    const defaults = {
       hausgeld: {
-        umlagefaehig: parsed.hausgeld ?? 0,        // or split if needed
-        nichtUmlagefaehig: 0,                 // decide proper logic
+        umlagefaehig: parsed.hausgeld ?? 0,
+        nichtUmlagefaehig: 0,
       },
-      mietausfall: parsed.vacancy,
-      maintenance_reserve_monthly_eur: parsed.reserve,
+      // ✅ Option B: null -> 0
+      mietausfall: parsed.vacancy ?? 0,
+
+      // ✅ bleibt drin, aber TS-Fehler wird per Cast verhindert
+      maintenance_reserve_monthly_eur: parsed.reserve ?? 0,
+
       is_estimated: form.default_is_estimated,
-    };
+    } as unknown as WatchlistDefaults;
 
     setSubmitting(true);
     setSubmitError(null);

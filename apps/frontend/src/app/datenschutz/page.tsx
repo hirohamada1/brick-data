@@ -1,6 +1,6 @@
 "use client"
 
-import Datenschutz from "@/pages/Datenschutz"
+import Datenschutz from "@/views/Datenschutz"
 
 export default function DatenschutzPage() {
   return <Datenschutz />

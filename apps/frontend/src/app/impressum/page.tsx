@@ -1,6 +1,6 @@
 "use client"
 
-import Impressum from "@/pages/Impressum"
+import Impressum from "@/views/Impressum"
 
 export default function ImpressumPage() {
   return <Impressum />

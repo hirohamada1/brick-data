@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "next-themes";
 import { Moon, Sun, TrendingUp, Bell, Home, BarChart3, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RotatingHeroTitle } from "@/components/landing/RotatingHeroTitle";
@@ -8,6 +8,7 @@ import { UnitPingFeature } from "@/components/landing/UnitPingFeature";
 import { PriceChart } from "@/components/dashboard/PriceChart";
 import { ListingsChart } from "@/components/dashboard/ListingsChart";
 import { Footer } from "@/components/layout/Footer";
+import type { Route } from "next";
 
 const features = [
   {
@@ -33,7 +34,8 @@ const features = [
 ];
 
 export default function Landing() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
 
   useEffect(() => {
@@ -85,7 +87,7 @@ export default function Landing() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button size="lg" className="rounded-2xl" asChild>
-                <Link href="/start">
+                <Link href={"/start" as Route}>
                   Jetzt starten
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>

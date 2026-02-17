@@ -119,21 +119,21 @@ export default function Dashboard() {
         </Button>
 
         <Button variant="outline" size="lg" asChild>
-          <Link href="/Alerts">
+          <Link href="/alerts">
             <Plus className="h-4 w-4 mr-2" />
             Neue Watchlist
           </Link>
         </Button>
 
         <Button variant="outline" size="lg" asChild>
-          <Link href="/Alerts">
+          <Link href="/alerts">
             <Bell className="h-4 w-4 mr-2" />
             Alert erstellen
           </Link>
         </Button>
 
         <Button variant="outline" size="lg" asChild>
-          <Link href="/Listings">
+          <Link href="/listings">
             <Download className="h-4 w-4 mr-2" />
             Listing importieren
           </Link>

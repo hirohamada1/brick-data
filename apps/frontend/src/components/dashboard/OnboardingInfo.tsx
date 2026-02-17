@@ -1,19 +1,30 @@
-import { useState } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
+const KEY = "brickdata-onboarding-dismissed";
+
 export function OnboardingInfo() {
-  const [dismissed, setDismissed] = useState(() => {
-    return localStorage.getItem("brickdata-onboarding-dismissed") === "true";
-  });
+  const [dismissed, setDismissed] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    // läuft garantiert nur im Browser
+    const stored = localStorage.getItem(KEY);
+    setDismissed(stored === "true");
+    setHydrated(true);
+  }, []);
 
   const handleDismiss = () => {
     setDismissed(true);
-    localStorage.setItem("brickdata-onboarding-dismissed", "true");
+    localStorage.setItem(KEY, "true");
   };
 
-  if (dismissed) return null;
+  // verhindert SSR/Hydration-Probleme + kein Flackern
+  if (!hydrated || dismissed) return null;
 
   return (
     <Card className="border-primary/30 bg-primary/5">

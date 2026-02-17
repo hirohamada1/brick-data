@@ -66,3 +66,8 @@ apps/backend/data/
 *.njsproj
 *.sln
 *.sw?
+
+# local env files
+.env.*
+# stray local file/folder
+/git

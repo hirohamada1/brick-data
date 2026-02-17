@@ -102,6 +102,14 @@ class WatchlistServiceTests(unittest.TestCase):
             {"k": "v"},
             "2026-02-01T10:00:00Z",
             "2026-02-01T12:00:00Z",
+            "Magdeburg",           # location_label
+            "sachsen-anhalt/magdeburg",  # location_path
+            100.0,                 # price_min
+            500000.0,              # price_max
+            30.0,                  # area_min
+            120.0,                 # area_max
+            1.0,                   # rooms_min
+            4.0,                   # rooms_max
         )
         watchlist_service.psycopg2 = _FakePsycopg2(row=row)
         service = watchlist_service.WatchlistService(database_url="postgres://test")
@@ -113,6 +121,14 @@ class WatchlistServiceTests(unittest.TestCase):
         self.assertEqual(result["name"], "Name")
         self.assertEqual(result["search_url"], "https://example.com")
         self.assertEqual(result["defaults"], {"k": "v"})
+        self.assertEqual(result["location_label"], "Magdeburg")
+        self.assertEqual(result["location_path"], "sachsen-anhalt/magdeburg")
+        self.assertEqual(result["price_min"], 100.0)
+        self.assertEqual(result["price_max"], 500000.0)
+        self.assertEqual(result["area_min"], 30.0)
+        self.assertEqual(result["area_max"], 120.0)
+        self.assertEqual(result["rooms_min"], 1.0)
+        self.assertEqual(result["rooms_max"], 4.0)
 
     def test_create_watchlist_validates_inputs(self):
         service = watchlist_service.WatchlistService(database_url="postgres://test")

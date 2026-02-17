@@ -40,17 +40,25 @@ class WatchlistRepository:
     database_url: str
     schema: str = "sandbox"
     source: str = "immoscout"
-    prevent_public_writes: bool = True
 
-    def __post_init__(self) -> None:
-        if not self.database_url:
-            raise RuntimeError("DATABASE_URL is required")
-        if self.prevent_public_writes and self.schema == "public":
-            raise RuntimeError("Public schema writes are blocked for this pipeline")
-        if self.schema != "sandbox":
-            raise RuntimeError("WatchlistRunner must use sandbox schema")
-        if not _SCHEMA_NAME_RE.match(self.schema):
-            raise ValueError(f"Invalid schema name: {self.schema}")
+    def __post_init__(self):
+        env = os.getenv("APP_ENV", "local")
+        allow_public_override = os.getenv("ALLOW_PUBLIC_WRITES", "false") == "true"
+
+        # Never allow public writes in test
+        if env == "test" and self.schema == "public":
+            raise RuntimeError("Test environment must not use public schema.")
+
+        # In local or staging → allow
+        if env in ("local", "staging"):
+            return
+
+        # In prod → require explicit override
+        if env == "prod" and not allow_public_override:
+            raise RuntimeError(
+                "Public schema writes in PROD require ALLOW_PUBLIC_WRITES=true"
+            )
+
 
     def load_previous_snapshot(self, watchlist_id: str) -> dict[int, dict]:
         self._ensure_db_driver()
@@ -261,8 +269,12 @@ class WatchlistRunner:
         repository = self.repository
         if repository is None:
             repository = from_env_repository()
-        if repository.schema != "sandbox":
-            raise RuntimeError("WatchlistRunner requires sandbox schema")
+        env = os.getenv("APP_ENV", "local")
+
+        # In test, enforce sandbox
+        if env == "test" and repository.schema != "sandbox":
+            raise RuntimeError("Test environment must use sandbox schema.")
+
 
         all_listings: list[dict] = []
         pages_with_results = 0

@@ -21,7 +21,7 @@ class Settings:
     def __init__(self):
         self.database_url = os.getenv("DATABASE_URL", "").strip()
         self.watchlist_schema = (
-            os.getenv("WATCHLIST_SCHEMA", "sandbox").strip() or "sandbox"
+            os.getenv("DB_SCHEMA", "sandbox").strip() or "sandbox"
         )
 
 settings = Settings()

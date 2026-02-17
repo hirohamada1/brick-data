@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { useTheme } from "@/context/ThemeContext";
 import { User, Bell, Database, Sun, Moon } from "lucide-react";
 
-export function Settings() {
+export default function Settings() {
   const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState({
     name: "Max Mustermann",

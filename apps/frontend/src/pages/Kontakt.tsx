@@ -3,7 +3,7 @@ import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/layout/Footer";
 
-export function Kontakt() {
+export default function Kontakt() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-background">

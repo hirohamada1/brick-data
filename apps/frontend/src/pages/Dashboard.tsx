@@ -15,7 +15,7 @@ import { ListingsChart } from "@/components/dashboard/ListingsChart";
 import { RecentSignals } from "@/components/dashboard/RecentSignals";
 import { OnboardingInfo } from "@/components/dashboard/OnboardingInfo";
 
-export function Dashboard() {
+export default function Dashboard() {
   const { simulateNewListing, listings, watchlists } = useApp();
   const kpis = getKPIs(listings, watchlists);
 

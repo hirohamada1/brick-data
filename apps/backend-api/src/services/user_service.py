@@ -8,8 +8,19 @@ from typing import Any
 
 import jwt
 import requests
-import psycopg2
-from psycopg2.extras import RealDictCursor
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+except Exception:  # pragma: no cover
+    psycopg2 = None
+    RealDictCursor = None
+
+try:
+    import psycopg
+    from psycopg.rows import dict_row
+except Exception:  # pragma: no cover
+    psycopg = None
+    dict_row = None
 
 
 
@@ -153,7 +164,19 @@ def _fetch_user_metadata_from_clerk(clerk_user_id: str) -> dict[str, Any]:
 def _db_conn():
 
     database_url = _get_env("DATABASE_URL")
-    return psycopg2.connect(database_url)
+    if psycopg2 is not None:
+        return psycopg2.connect(database_url)
+    if psycopg is not None:
+        return psycopg.connect(database_url)
+    raise RuntimeError("No postgres driver found. Install psycopg2-binary or psycopg[binary].")
+
+
+def _db_cursor(conn):
+    if psycopg2 is not None and RealDictCursor is not None:
+        return conn.cursor(cursor_factory=RealDictCursor)
+    if psycopg is not None and dict_row is not None:
+        return conn.cursor(row_factory=dict_row)
+    return conn.cursor()
 
 
 def ensure_user_from_clerk(clerk_jwt: str) -> dict[str, Any]:
@@ -181,7 +204,7 @@ def ensure_user_from_clerk(clerk_jwt: str) -> dict[str, Any]:
     # 2) Falls NICHT -> API-Call als Fallback (für Legacy-User oder Webhook-Ausfälle)
     
     with _db_conn() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        with _db_cursor(conn) as cur:
             # Schritt 1: Schauen ob User existiert
             cur.execute(
                 "SELECT * FROM public.users WHERE clerk_id = %s",

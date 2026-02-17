@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Footer } from "@/components/layout/Footer";
 
-export function Impressum() {
+export default function Impressum() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-background">

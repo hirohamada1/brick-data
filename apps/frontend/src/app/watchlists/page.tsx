@@ -12,7 +12,19 @@ const mockWatchlists: Watchlist[] = [
   {
     id: "1",
     name: "München Zentrum 2-Zimmer",
-    searchUrl: "https://www.immobilienscout24.de/Suche/...",
+    searchUrl: "https://www.immobilienscout24.de/Suche/de/bayern/muenchen",
+    
+    // Structured search parameters
+    locationLabel: "München Zentrum",
+    locationPath: "bayern/muenchen",
+    priceMin: 300000,
+    priceMax: 650000,
+    areaMin: 50,
+    areaMax: 80,
+    roomsMin: 2,
+    roomsMax: 3,
+
+    // Investment parameters
     zielmodus: {
       type: "nettorendite",
       zielNettorendite: 4.5,
@@ -33,7 +45,19 @@ const mockWatchlists: Watchlist[] = [
   {
     id: "2",
     name: "Berlin Prenzlauer Berg",
-    searchUrl: "https://www.immobilienscout24.de/Suche/...",
+    searchUrl: "https://www.immobilienscout24.de/Suche/de/berlin/prenzlauer-berg",
+
+    // Structured search parameters
+    locationLabel: "Berlin Prenzlauer Berg",
+    locationPath: "berlin/prenzlauer-berg",
+    priceMin: 250000,
+    priceMax: 500000,
+    areaMin: 40,
+    areaMax: 75,
+    roomsMin: 1,
+    roomsMax: 3,
+
+    // Investment parameters
     zielmodus: {
       type: "cashflow",
       zielCashflow: 150,
@@ -51,7 +75,7 @@ const mockWatchlists: Watchlist[] = [
     kaltmieteProQm: 15.0,
     createdAt: "2024-01-10",
   },
-]
+];
 
 export default function WatchlistPage() {
   const [watchlists] = useState<Watchlist[]>(mockWatchlists)

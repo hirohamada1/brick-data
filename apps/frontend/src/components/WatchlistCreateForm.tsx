@@ -62,7 +62,7 @@ export function WatchlistCreateForm() {
     }
 
     if (!form.search_url.trim()) {
-      nextErrors.search_url = "Search-URL ist erforderlich.";
+      nextErrors.search_url = "URL ist erforderlich.";
     }
 
     const hausgeld = numberFromInput(form.default_hausgeld_monthly_eur);
@@ -101,8 +101,11 @@ export function WatchlistCreateForm() {
     if (Object.keys(nextErrors).length > 0) return;
 
     const defaults: WatchlistDefaults = {
-      hausgeld_monthly_eur: parsed.hausgeld,
-      vacancy_rate: parsed.vacancy,
+      hausgeld: {
+        umlagefaehig: parsed.hausgeld ?? 0,        // or split if needed
+        nichtUmlagefaehig: 0,                 // decide proper logic
+      },
+      mietausfall: parsed.vacancy,
       maintenance_reserve_monthly_eur: parsed.reserve,
       is_estimated: form.default_is_estimated,
     };

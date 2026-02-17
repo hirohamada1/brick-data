@@ -1,3 +1,6 @@
+"use client";
+
+
 import { useState } from "react";
 import {
   Dialog,
@@ -50,7 +53,7 @@ const CHANNELS: { value: AlertChannel; label: string }[] = [
   { value: "push", label: "Push" },
 ];
 
-export function Alerts() {
+export default function Alerts() {
   const { alerts, pings, listings, addAlert, dismissPing, addListingToWatchlist } =
     useApp();
   const [dialogOpen, setDialogOpen] = useState(false);

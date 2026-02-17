@@ -48,7 +48,7 @@ export function RecentSignals() {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Letzte Signals</CardTitle>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/alerts">
+          <Link href="/Alerts">
             Alle anzeigen
             <ArrowRight className="h-4 w-4 ml-1" />
           </Link>

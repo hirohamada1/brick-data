@@ -52,7 +52,7 @@ const SOURCE_OPTIONS: { value: ListingSource; label: string }[] = [
   { value: "immowelt", label: "Immowelt" },
 ];
 
-export function Listings() {
+export default function Listings() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const openId = searchParams.get("open");

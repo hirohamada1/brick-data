@@ -32,7 +32,7 @@ const features = [
   },
 ];
 
-export function Landing() {
+export default function Landing() {
   const { theme, toggleTheme } = useTheme();
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
 

@@ -10,7 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.routes.watchlist import router as watchlist_router
 from src.routes.runs import router as runs_router # durch src genauer definiert von wo geholt wird
 from src.routes.users import router as users_router # users neu als router definiert, damit kann die Route /api/users/ensure ansteuerbar gemacht werden
-from src.routes.webhooks import router as webhooks_router # webhooks router für Clerk Events
+try:
+    from src.routes.webhooks import router as webhooks_router # webhooks router für Clerk Events
+except Exception:
+    webhooks_router = None
 
 ENV_PATH = Path(__file__).resolve().parents[3] / ".env.local"
 load_dotenv(ENV_PATH)
@@ -26,7 +29,8 @@ app.add_middleware(
 app.include_router(watchlist_router)
 app.include_router(runs_router)
 app.include_router(users_router) # users neu als router definiert
-app.include_router(webhooks_router) # webhooks router für Clerk Events
+if webhooks_router is not None:
+    app.include_router(webhooks_router) # webhooks router für Clerk Events
 
 if __name__ == "__main__":
     import uvicorn

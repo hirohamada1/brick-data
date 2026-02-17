@@ -39,7 +39,7 @@ async function submitLead(data: LeadData): Promise<void> {
   }
 }
 
-export function Start() {
+export default function Start() {
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (data: LeadData) => {

@@ -1,8 +1,8 @@
 // Types for the Real Estate Watchlist Tool
 
 export interface Hausgeld {
-    umlagefaehig: number // Recoverable from tenant
-    nichtUmlagefaehig: number // Non-recoverable
+    umlagefaehig: number // Bsp 0.7 = 70% 
+    nichtUmlagefaehig: number // Bsp 0.3 = 30%
 }
 
 export type ZielmodusType = "nettorendite" | "cashflow"

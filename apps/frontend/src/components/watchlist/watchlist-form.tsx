@@ -120,11 +120,12 @@ export function WatchlistForm() {
   }
 
   const updateHausgeld = (field: "umlagefaehig" | "nichtUmlagefaehig", value: string) => {
-    setFormData((prev) => ({
-      ...prev,
+    const percentage = parseFloat(value) || 0 // percentage ist entweder der eingegebene Wert oder 0
+    setFormData((prev) => ({  // Ankündigung das sich die Formulardaten ändern 
+      ...prev, // Kopie wird erstellt, alle anderen Werte erhalten
       hausgeld: {
-        ...prev.hausgeld,
-        [field]: parseFloat(value) || 0,
+        ...prev.hausgeld, // wird ein Wert geändrt bleibt der Rest der Hausgeldobjekts erhalten
+        [field]: percentage / 100, // Veränderung zu dezimal (71% → 0.71)
       },
     }))
   }
@@ -188,7 +189,15 @@ export function WatchlistForm() {
     }
   }
 
-  const isFormValid = formData.name.trim() !== ""
+  // Validate Hausgeld
+  const hausgeldGesamt = formData.hausgeld.umlagefaehig + formData.hausgeld.nichtUmlagefaehig
+  const isHausgeldValid =
+    formData.hausgeld.umlagefaehig >= 0 &&
+    formData.hausgeld.nichtUmlagefaehig >= 0 &&
+    formData.hausgeld.umlagefaehig <= hausgeldGesamt &&
+    hausgeldGesamt <= 1.0 // Max 100%
+
+  const isFormValid = formData.name.trim() !== "" && isHausgeldValid
 
   const handleSubmit = async () => {
     if (!isFormValid) return
@@ -370,24 +379,36 @@ export function WatchlistForm() {
         <FormSection
           icon={<FileText className="h-6 w-6 text-primary" />}
           title="Hausgeld"
-          subtitle="Monatliche Nebenkosten der Eigentümergemeinschaft"
+          subtitle="Monatliche Nebenkosten als Prozent vom Kaufpreis"
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <InputWithSuffix
               label="Umlagefähig"
-              value={formData.hausgeld.umlagefaehig}
+              value={(formData.hausgeld.umlagefaehig * 100).toFixed(2)} // Umrechnung der Dezimal Zahl in den Prozentwert für den Schellenberg
               onChange={(v) => updateHausgeld("umlagefaehig", v)}
-              suffix="€"
-              placeholder="0.00"
+              suffix="%"
+              placeholder="71.00"
+              helperText="Anteil am Kaufpreis, der an Mieter weitergegeben werden kann"
             />
             <InputWithSuffix
               label="Nicht umlagefähig"
-              value={formData.hausgeld.nichtUmlagefaehig}
+              value={(formData.hausgeld.nichtUmlagefaehig * 100).toFixed(2)}
               onChange={(v) => updateHausgeld("nichtUmlagefaehig", v)}
-              suffix="€"
-              placeholder="0.00"
+              suffix="%"
+              placeholder="29.00"
+              helperText="Anteil am Kaufpreis, den Eigentümer trägt"
             />
           </div>
+          {!isHausgeldValid && (formData.hausgeld.umlagefaehig > 0 || formData.hausgeld.nichtUmlagefaehig > 0) && (
+            <div className="mt-2 flex items-start gap-2 rounded-lg bg-destructive/10 p-3">
+              <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
+              <div className="text-sm text-destructive">
+                {hausgeldGesamt > 1.0
+                  ? "Hausgeld gesamt darf nicht mehr als 100% sein"
+                  : "Umlagefähig kann nicht größer als Gesamt-Hausgeld sein"}
+              </div>
+            </div>
+          )}
         </FormSection>
 
         {/* Kaufnebenkosten */}
@@ -579,7 +600,7 @@ export function WatchlistForm() {
             />
             <SummaryRow
               label="Hausgeld gesamt"
-              value={`${summary.hausgeldGesamt.toFixed(2)} €/Monat`}
+              value={`${(summary.hausgeldGesamt * 100).toFixed(2)}%`}
             />
             <SummaryRow
               label="Mietausfall"

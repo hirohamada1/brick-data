@@ -13,7 +13,7 @@ const mockWatchlists: Watchlist[] = [
     id: "1",
     name: "München Zentrum 2-Zimmer",
     searchUrl: "https://www.immobilienscout24.de/Suche/de/bayern/muenchen",
-    
+
     // Structured search parameters
     locationLabel: "München Zentrum",
     locationPath: "bayern/muenchen",
@@ -34,7 +34,7 @@ const mockWatchlists: Watchlist[] = [
     tilgungssatz: 2,
     instandhaltungProQmMonat: 1.2,
     zielDscr: 1.2,
-    hausgeld: { umlagefaehig: 150, nichtUmlagefaehig: 100 },
+    hausgeld: { umlagefaehig: 0.60, nichtUmlagefaehig: 0.40 },
     notarkosten: 1.5,
     grunderwerbssteuer: 3.5,
     grundbuchkosten: 0.5,
@@ -67,7 +67,7 @@ const mockWatchlists: Watchlist[] = [
     tilgungssatz: 2,
     instandhaltungProQmMonat: 1.1,
     zielDscr: 1.2,
-    hausgeld: { umlagefaehig: 120, nichtUmlagefaehig: 80 },
+    hausgeld: { umlagefaehig: 0.75, nichtUmlagefaehig: 0.25 },
     notarkosten: 1.5,
     grunderwerbssteuer: 6.0,
     grundbuchkosten: 0.5,
@@ -131,7 +131,7 @@ export default function WatchlistPage() {
                   <div>
                     <p className="text-muted-foreground">Hausgeld</p>
                     <p className="font-medium text-card-foreground">
-                      {(watchlist.hausgeld.umlagefaehig + watchlist.hausgeld.nichtUmlagefaehig).toFixed(0)} €
+                      {((watchlist.hausgeld.umlagefaehig + watchlist.hausgeld.nichtUmlagefaehig) * 100).toFixed(1)}%
                     </p>
                   </div>
                   <div>
@@ -144,9 +144,9 @@ export default function WatchlistPage() {
                   </div>
                 </div>
                 {watchlist.searchUrl && (
-                  <a 
-                    href={watchlist.searchUrl} 
-                    target="_blank" 
+                  <a
+                    href={watchlist.searchUrl}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
                   >

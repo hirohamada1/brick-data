@@ -12,14 +12,14 @@ def main():
     )
 
     summary = runner.run_watchlist(
-        {
-            "watchlist_id": str(uuid.uuid4()),
-            "search_url": (
-                "https://www.immobilienscout24.de/Suche/de/baden-wuerttemberg/stuttgart/wohnung-kaufen?numberofrooms=4.0-&livingspace=-75.0&enteredFrom=result_list"
-            ),
-            "user_id": str(uuid.uuid4()),
-        }
-    )  
+    {
+        "watchlist_id": "712a0265-e482-4412-8555-c02517c3804e",
+        "search_url": (
+            "https://www.immobilienscout24.de/Suche/de/baden-wuerttemberg/stuttgart/wohnung-kaufen?numberofrooms=4.0-&livingspace=-75.0&enteredFrom=result_list"
+        ),
+        "user_id": "7e56adee-8281-4369-bd08-b309c64f5dba",
+    }
+    ) 
 
     
     

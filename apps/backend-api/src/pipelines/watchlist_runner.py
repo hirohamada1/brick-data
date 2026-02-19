@@ -17,6 +17,7 @@ from typing import Any, Dict, Mapping, Optional
 from settings import settings
 
 from services.delta_detector import compute_deltas
+from services.calculator import CalcInputs, calculate
 from scraper.is24_client import IS24Client
 from scraper.is24_parser import (
     extract_resultlist_json,
@@ -105,6 +106,22 @@ class WatchlistRepository:
 
         return previous
 
+#Holt die benötigten Daten für die Berechnungen 
+    def _load_watchlist_defaults(self, watchlist_id: str) -> dict:
+        """Lädt defaults JSONB aus watchlists für den Calculator."""
+        self._ensure_db_driver() # Stellt klar, das die Verbindung zur Db bereit ist
+        with psycopg.connect(self.database_url) as conn:  # Öffnet mäßig die Tür zur Datenbank und "with" ist wichtig um sie wieder sicher zu schließen
+            with conn.cursor() as cur:
+                self._set_search_path(cur) # Sagt der Datenbank in welchem Schema sie suchen soll
+                cur.execute( # Eigentlicher Befehl an die Datenbank, gibt Inhalt zurück
+                    "SELECT defaults FROM watchlists WHERE id = %s",
+                    (watchlist_id,),
+                )
+                row = cur.fetchone() # Holt das Ergebnis
+                if row and row[0]: # Wenn ein Ergebnis da ist und es nicht leer ist
+                    return row[0] if isinstance(row[0], dict) else {} # Gibt das Ergebnis zurück, wenn es ein Dictionary ist, ansonsten leer
+                return {} # Gibt leer zurück, wenn kein Ergebnis da ist
+
     def persist_run_results(
         self,
         *,
@@ -114,6 +131,9 @@ class WatchlistRepository:
         deltas: dict,
     ) -> dict:
         self._ensure_db_driver()
+
+        # Watchlist-Defaults einmal laden (gilt für alle Listings dieser Watchlist)
+        defaults = self._load_watchlist_defaults(watchlist_id)
 
         upserted = 0
         linked = 0
@@ -131,6 +151,8 @@ class WatchlistRepository:
                         watchlist_id=watchlist_id,
                         listing_pk=listing_pk,
                         user_id=user_id,
+                        listing=listing,
+                        defaults=defaults,
                     )
                     linked += 1
 
@@ -190,6 +212,7 @@ class WatchlistRepository:
                 postcode = excluded.postcode,
                 city = excluded.city,
                 quarter = excluded.quarter,
+                rooms = excluded.rooms,
                 updated_at = now()
             returning id;
         """
@@ -201,8 +224,8 @@ class WatchlistRepository:
                 listing_url,
                 listing.get("title"),
                 listing.get("price_eur"),
-                listing.get("living_space_sqm"),
-                None,
+                listing.get("living_space"),
+                listing.get("rooms"),
                 listing.get("street"),
                 listing.get("house_number"),
                 listing.get("postcode"),
@@ -217,6 +240,69 @@ class WatchlistRepository:
             raise RuntimeError("Failed to upsert l1 listing row")
         return str(row[0])
 
+# Die geholten Daten werden hier passig für das calculator.py vorbereitet
+# als ein Objekt das calculate aus calculator.py verarbeiten kann
+    def _build_calc_inputs(self, listing: dict, defaults: dict) -> Optional[CalcInputs]:
+        """Baut CalcInputs aus Listing-Rohdaten + Watchlist-Defaults.
+        Gibt None zurück wenn Pflichtfelder fehlen (z.B. kein Preis oder keine Fläche).
+        """
+        kaufpreis = listing.get("price_eur")
+        flaeche = listing.get("living_space")
+
+        # Ohne Kaufpreis oder Fläche ist keine sinnvolle Renditeberechnung möglich
+        if not kaufpreis or kaufpreis <= 0 or not flaeche or flaeche <= 0:
+            return None
+
+        # Hilfsfunktion zum sicheren Parsen der Defaults ohne Fallback-Zahlen
+        def get_opt(key: str) -> Optional[float]:
+            val = defaults.get(key)
+            return float(val) if val is not None else None
+
+        # Pflichtfelder aus den Watchlist-Einstellungen
+        km_pro_qm    = get_opt("kaltmieteProQm")
+        zins         = get_opt("zinssatz")
+        tilgung      = get_opt("tilgungssatz")
+        instand      = get_opt("instandhaltungProQmMonat")
+        ausfall      = get_opt("mietausfall")
+        notar        = get_opt("notarkosten")
+        steuer       = get_opt("grunderwerbssteuer")
+        buch         = get_opt("grundbuchkosten")
+
+        # Hausgeld
+        hg_obj       = defaults.get("hausgeld") or {}
+        hg_umlage    = hg_obj.get("umlagefaehigProzentMiete")
+        hg_nicht     = hg_obj.get("nichtUmlagefaehigProzentMiete")
+
+        # Wenn eines der Kern-Parameter fehlt, geben wir None zurück (Datenbank-Felder bleiben leer)
+        essentials = [km_pro_qm, zins, tilgung, instand, ausfall, notar, steuer, buch, hg_umlage, hg_nicht]
+        if any(v is None for v in essentials):
+            logger.warning("Calculation skipped: missing defaults for watchlist_id=%s", defaults.get("id"))
+            return None
+
+        # Zielmodus (hat Standard-Fallback im Calculator, hier nur Durchreichen)
+        zielmodus_obj = defaults.get("zielmodus") or {}
+        zielmodus_type = zielmodus_obj.get("type") or "nettorendite"
+        
+        return CalcInputs(
+            kaufpreis_eur=float(kaufpreis),
+            flaeche_qm=float(flaeche),
+            kaltmiete_pro_qm=km_pro_qm,
+            hausgeld_umlagefaehig_prozent_miete=float(hg_umlage) / 100.0,
+            hausgeld_nicht_umlagefaehig_prozent_miete=float(hg_nicht) / 100.0,
+            mietausfall_prozent=float(ausfall) / 100.0,
+            instandhaltung_eur_pro_qm_monat=instand,
+            zinssatz=float(zins) / 100.0,
+            tilgungssatz=float(tilgung) / 100.0,
+            notarkosten_prozent=float(notar) / 100.0,
+            grunderwerbssteuer_prozent=float(steuer) / 100.0,
+            grundbuchkosten_prozent=float(buch) / 100.0,
+            zielmodus=zielmodus_type,
+            ziel_nettorendite=float(zielmodus_obj.get("zielNettorendite")) if zielmodus_obj.get("zielNettorendite") else None,
+            ziel_cashflow_eur_monat=float(zielmodus_obj.get("zielCashflow")) if zielmodus_obj.get("zielCashflow") else None,
+            erlaubte_abweichung=float(zielmodus_obj.get("erlaubteAbweichung")) if zielmodus_obj.get("erlaubteAbweichung") else None,
+        )
+
+#nimmt die ergebnisse aus Schritt 1 und 2 und speichert sie in watchlist_listings
     def _link_watchlist_listing(
         self,
         cur: Any,
@@ -224,21 +310,78 @@ class WatchlistRepository:
         watchlist_id: str,
         listing_pk: str,
         user_id: Optional[str],
+        listing: dict,
+        defaults: dict,
     ) -> None:
-        cur.execute(
-            """
-            insert into watchlist_listings (
-                user_id,
-                watchlist_id,
-                listing_id,
-                first_seen_at,
-                last_seen_at
-            ) values (%s, %s, %s, now(), now())
-            on conflict (watchlist_id, listing_id) do update
-            set last_seen_at = excluded.last_seen_at;
-            """,
-            (user_id, watchlist_id, listing_pk),
-        )
+        from datetime import datetime, timezone
+
+        # Calculator ausführen
+        calc_inputs = self._build_calc_inputs(listing, defaults)
+        result = calculate(calc_inputs) if calc_inputs else None
+
+        if result:
+            cur.execute(
+                """
+                insert into watchlist_listings (
+                    user_id, watchlist_id, listing_id,
+                    first_seen_at, last_seen_at,
+                    kaufpreis_eur, flaeche_qm,
+                    kaltmiete_eur_monat, effektive_miete_eur_monat,
+                    hausgeld_total_eur_monat, instandhaltung_eur_monat,
+                    noi_eur_monat, zinsen_eur_monat, tilgung_eur_monat,
+                    cashflow_eur_monat, nettorendite_prozent_pa, dscr,
+                    ziel_abweichung, ziel_erfuellt,
+                    calc_source, calculated_at
+                ) values (
+                    %s, %s, %s, now(), now(),
+                    %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, now()
+                )
+                on conflict (watchlist_id, listing_id) do update set
+                    last_seen_at            = excluded.last_seen_at,
+                    kaufpreis_eur           = excluded.kaufpreis_eur,
+                    flaeche_qm              = excluded.flaeche_qm,
+                    kaltmiete_eur_monat     = excluded.kaltmiete_eur_monat,
+                    effektive_miete_eur_monat = excluded.effektive_miete_eur_monat,
+                    hausgeld_total_eur_monat = excluded.hausgeld_total_eur_monat,
+                    instandhaltung_eur_monat = excluded.instandhaltung_eur_monat,
+                    noi_eur_monat           = excluded.noi_eur_monat,
+                    zinsen_eur_monat        = excluded.zinsen_eur_monat,
+                    tilgung_eur_monat       = excluded.tilgung_eur_monat,
+                    cashflow_eur_monat      = excluded.cashflow_eur_monat,
+                    nettorendite_prozent_pa = excluded.nettorendite_prozent_pa,
+                    dscr                    = excluded.dscr,
+                    ziel_abweichung         = excluded.ziel_abweichung,
+                    ziel_erfuellt           = excluded.ziel_erfuellt,
+                    calc_source             = excluded.calc_source,
+                    calculated_at           = excluded.calculated_at;
+                """,
+                (
+                    user_id, watchlist_id, listing_pk,
+                    calc_inputs.kaufpreis_eur, calc_inputs.flaeche_qm,
+                    result.kaltmiete_eur_monat, result.effektive_miete_eur_monat,
+                    result.hausgeld_total_eur_monat, result.instandhaltung_eur_monat,
+                    result.noi_eur_monat,
+                    calc_inputs.kaufpreis_eur * calc_inputs.zinssatz / 12.0,
+                    calc_inputs.kaufpreis_eur * calc_inputs.tilgungssatz / 12.0,
+                    result.cashflow_eur_monat, result.nettorendite_prozent_pa, result.dscr,
+                    result.ziel_abweichung, result.ziel_erfuellt,
+                    "defaults",
+                ),
+            )
+        else:
+            # Kein Preis vorhanden → nur Verknüpfung ohne Berechnung
+            cur.execute(
+                """
+                insert into watchlist_listings (
+                    user_id, watchlist_id, listing_id, first_seen_at, last_seen_at
+                ) values (%s, %s, %s, now(), now())
+                on conflict (watchlist_id, listing_id) do update
+                set last_seen_at = excluded.last_seen_at;
+                """,
+                (user_id, watchlist_id, listing_pk),
+            )
 
     def _set_search_path(self, cur: Any) -> None:
         assert sql is not None

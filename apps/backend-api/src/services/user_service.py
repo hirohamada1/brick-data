@@ -83,8 +83,13 @@ def _get_jwks() -> dict[str, Any]:
 
 def _verify_clerk_jwt(token: str) -> dict[str, Any]:
 
-    issuer = _get_env("CLERK_ISSUER")  
+    issuer = _get_env("CLERK_ISSUER").rstrip("/")
+
     jwks = _get_jwks()
+
+    print("TOKEN ISS:", jwt.decode(token, options={"verify_signature": False}).get("iss"))
+    print("EXPECTED ISSUER:", issuer)
+
 
     
     unverified_header = jwt.get_unverified_header(token)
@@ -177,6 +182,21 @@ def _db_cursor(conn):
     if psycopg is not None and dict_row is not None:
         return conn.cursor(row_factory=dict_row)
     return conn.cursor()
+
+def get_clerk_user_id_from_token(token: str) -> str:
+    decoded = verify_clerk_token(token)
+    return decoded["sub"]
+
+def ensure_user_exists(clerk_id: str, email: str | None = None) -> str:
+    with conn.cursor() as cur:
+        cur.execute("""
+            INSERT INTO users (clerk_id, email)
+            VALUES (%s, %s)
+            ON CONFLICT (clerk_id)
+            DO UPDATE SET email = EXCLUDED.email
+            RETURNING id;
+        """, (clerk_id, email))
+        return cur.fetchone()[0]
 
 
 def ensure_user_from_clerk(clerk_jwt: str) -> dict[str, Any]:

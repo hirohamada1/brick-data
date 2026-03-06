@@ -105,14 +105,14 @@ export function WatchlistCreateForm() {
         umlagefaehig: parsed.hausgeld ?? 0,
         nichtUmlagefaehig: 0,
       },
-      // ✅ Option B: null -> 0
+
+      notarkosten: 1.5,
+      grunderwerbssteuer: 3.5,
+      grundbuchkosten: 0.5,
       mietausfall: parsed.vacancy ?? 0,
-
-      // ✅ bleibt drin, aber TS-Fehler wird per Cast verhindert
-      maintenance_reserve_monthly_eur: parsed.reserve ?? 0,
-
-      is_estimated: form.default_is_estimated,
-    } as unknown as WatchlistDefaults;
+      kaltmieteProQm: 0,
+      instandhaltungProQmMonat: parsed.reserve ?? 0,
+    };
 
     setSubmitting(true);
     setSubmitError(null);

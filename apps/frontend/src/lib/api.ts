@@ -10,31 +10,58 @@ type RequestOptions = RequestInit & {
   baseUrl?: string;
 };
 
+function normalizeBaseUrl(value?: string): string {
+  return (value ?? "").trim().replace(/\/$/, "");
+}
+
 function getDefaultBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+  const configured = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
+  if (configured) {
+    return configured;
+  }
+
+  throw new Error(
+    "Missing NEXT_PUBLIC_API_BASE_URL. Set it in the active frontend .env file."
+  );
 }
 
 function buildUrl(path: string, baseUrl?: string): string {
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
   }
-  const prefix = baseUrl ?? getDefaultBaseUrl();
-  return `${prefix}${path}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const prefix = normalizeBaseUrl(baseUrl ?? getDefaultBaseUrl());
+  if (!prefix) return normalizedPath;
+  return `${prefix}${normalizedPath}`;
 }
 
 async function request<T>(path: string, init: RequestOptions = {}): Promise<T> {
   const { baseUrl, headers, ...rest } = init;
-  const res = await fetch(buildUrl(path, baseUrl), {
+  const isAbsolutePath = path.startsWith("http://") || path.startsWith("https://");
+  const candidate = isAbsolutePath
+    ? path
+    : buildUrl(path, normalizeBaseUrl(baseUrl) || getDefaultBaseUrl());
+
+  const res = await fetch(candidate, {
     headers: { "Content-Type": "application/json", ...(headers ?? {}) },
     ...rest,
   });
 
   const text = await res.text();
   if (!res.ok) {
-    throw new Error(text || `Request failed with ${res.status}`);
+    throw new Error(text || `Request failed with ${res.status} (${candidate})`);
   }
-  if (!text) return null as T;
-  return JSON.parse(text) as T;
+  if (!text) {
+    return null as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(
+      `Failed to parse JSON response from ${candidate}. Received: ${text.slice(0, 200)}`
+    );
+  }
 }
 
 export async function createWatchlist(payload: {

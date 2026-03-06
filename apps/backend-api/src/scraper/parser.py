@@ -57,6 +57,11 @@ def extract_embedded_search_payload(html: str) -> dict:
         if payload is not None:
             return payload
 
+    for candidate in [*candidates, html]:
+        resultlist_entries = _extract_resultlist_entries_array(candidate)
+        if resultlist_entries is not None:
+            return {"resultlistEntries": resultlist_entries}
+
     raise ValueError("Could not parse IS24 embedded search payload with 'resultlistEntries'")
 
 
@@ -220,7 +225,40 @@ def _extract_object_around_hint(text: str, hint: str) -> Optional[str]:
     return _extract_balanced_object(text, start)
 
 
+def _extract_resultlist_entries_array(text: str) -> Optional[list | dict]:
+    source = html_lib.unescape(text)
+    match = re.search(r'["\']?resultlistEntries["\']?\s*:', source)
+    if match is None:
+        return None
+
+    idx = match.end()
+    while idx < len(source) and source[idx].isspace():
+        idx += 1
+
+    if idx >= len(source):
+        return None
+
+    if source[idx] == "[":
+        payload = _extract_balanced_block(source, idx, "[", "]")
+    elif source[idx] == "{":
+        payload = _extract_balanced_block(source, idx, "{", "}")
+    else:
+        return None
+
+    if not payload:
+        return None
+
+    parsed = _parse_json_like(payload)
+    if isinstance(parsed, (list, dict)):
+        return parsed
+    return None
+
+
 def _extract_balanced_object(text: str, start_idx: int) -> Optional[str]:
+    return _extract_balanced_block(text, start_idx, "{", "}")
+
+
+def _extract_balanced_block(text: str, start_idx: int, open_char: str, close_char: str) -> Optional[str]:
     depth = 0
     in_single = False
     in_double = False
@@ -244,9 +282,9 @@ def _extract_balanced_object(text: str, start_idx: int) -> Optional[str]:
         if in_single or in_double:
             continue
 
-        if char == "{":
+        if char == open_char:
             depth += 1
-        elif char == "}":
+        elif char == close_char:
             depth -= 1
             if depth == 0:
                 return text[start_idx : idx + 1]

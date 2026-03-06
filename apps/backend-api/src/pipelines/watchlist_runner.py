@@ -59,7 +59,6 @@ class WatchlistRepository:
                 "Public schema writes in PROD require ALLOW_PUBLIC_WRITES=true"
             )
 
-
     def load_previous_snapshot(self, watchlist_id: str) -> dict[int, dict]:
         self._ensure_db_driver()
 
@@ -257,6 +256,13 @@ class WatchlistRunner:
     max_pages: int = 50
 
     def run_watchlist(self, watchlist: Mapping[str, Any]) -> Dict[str, Any]:
+        backend_mode = (os.getenv("IS24_FETCH_BACKEND", "web").strip().lower() or "web")
+        if backend_mode in {"mobile", "auto"}:
+            logger.warning(
+                "WatchlistRunner is a legacy web-only pipeline; IS24_FETCH_BACKEND=%s is ignored here",
+                backend_mode,
+            )
+
         watchlist_id = str(watchlist.get("watchlist_id") or watchlist.get("id") or "").strip()
         search_url = str(watchlist.get("search_url") or "").strip()
         user_id = watchlist.get("user_id")

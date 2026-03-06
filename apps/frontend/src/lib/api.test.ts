@@ -19,7 +19,10 @@ describe("api helpers", () => {
 
     const result = await getListings();
     expect(result).toEqual(payload);
-    expect(mockFetch).toHaveBeenCalledWith("/api/listings", {
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(String(url)).toContain("/api/listings");
+    expect(init).toEqual({
       headers: { "Content-Type": "application/json" },
     });
   });
@@ -50,14 +53,14 @@ describe("api helpers", () => {
 
     const result = await upsertManualInputs("listing-1", payload);
     expect(result).toEqual(response);
-    expect(mockFetch).toHaveBeenCalledWith(
-      "/api/listings/listing-1/manual-inputs",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(String(url)).toContain("/api/listings/listing-1/manual-inputs");
+    expect(init).toEqual({
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
   });
 
   it("throws a useful error on non-ok responses", async () => {

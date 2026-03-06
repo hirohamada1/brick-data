@@ -26,14 +26,11 @@ def _run_watchlist_background(watchlist_id: str, run_id: str):
 
 @router.post("/api/watchlists/{watchlist_id}/runs")
 def start_pipeline_run(watchlist_id: str):
-    print("STEP A: /runs endpoint called", watchlist_id)
-
     watchlist_id = watchlist_id.strip()
     if not watchlist_id:
         raise HTTPException(status_code=400, detail="watchlist_id must be non-empty")
 
     run_id = create_run(watchlist_id=watchlist_id, status="queued")
-    print("STEP A: run row created", run_id)
 
     threading.Thread(
         target=_run_watchlist_background,
@@ -43,12 +40,6 @@ def start_pipeline_run(watchlist_id: str):
     print("STEP A: background thread dispatched", run_id)
 
     return {"run_id": run_id, "status": "queued"}
-
-
-
-@router.post("/api/watchlists/{watchlist_id}/runs")
-def start_pipeline_run_plural(watchlist_id: str):
-    return start_pipeline_run(watchlist_id)
 
 
 @router.get("/api/watchlists/{watchlist_id}/runs/latest")

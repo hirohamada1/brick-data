@@ -82,20 +82,31 @@ class _RecordingRunService(run_service.RunService):
 class RunServiceTests(unittest.TestCase):
     def setUp(self):
         self._orig_l1 = run_service.L1Upserter
-        self._orig_get_client = run_service._get_brightdata_client
+        self._orig_get_client = run_service._build_playwright_client
         self._orig_search = run_service._scrape_search_hits
+        self._orig_session_manager = run_service.SessionManager
 
         run_service.L1Upserter = _FakeL1Upserter
-        run_service._get_brightdata_client = lambda: object()
-        run_service._scrape_search_hits = lambda _url, client: [
+        run_service._build_playwright_client = lambda: object()
+        run_service.SessionManager = lambda: type(  # type: ignore[assignment]
+            "_SessionMgr",
+            (),
+            {
+                "start_run_session": lambda self, watchlist_id, run_id: type(
+                    "_RunSession", (), {"session_id": "sess-1"}
+                )()
+            },
+        )()
+        run_service._scrape_search_hits = lambda _url, client, **kwargs: [
             _FakeHit("e1", "https://example.com/expose/1", title="Listing 1", price_eur=100000, living_space_sqm=50, rooms=2, city="Test", postcode="12345"),
             _FakeHit("e2", "https://example.com/expose/2", title="Listing 2", price_eur=120000, living_space_sqm=60, rooms=3, city="Test", postcode="12345"),
         ]
 
     def tearDown(self):
         run_service.L1Upserter = self._orig_l1
-        run_service._get_brightdata_client = self._orig_get_client
+        run_service._build_playwright_client = self._orig_get_client
         run_service._scrape_search_hits = self._orig_search
+        run_service.SessionManager = self._orig_session_manager
 
     def test_run_watchlist_happy_path(self):
         service = _RecordingRunService(database_url="postgres://test")

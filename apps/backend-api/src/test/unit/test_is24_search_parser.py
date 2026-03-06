@@ -80,6 +80,30 @@ class IS24SearchParserTests(unittest.TestCase):
         listings = parse_search_results("<html><body>No embedded data</body></html>")
         self.assertEqual(listings, [])
 
+    def test_parse_search_results_real_fixture_has_required_fields(self) -> None:
+        fixture_path = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "sample_is24_search.html"
+        html = fixture_path.read_text(encoding="utf-8")
+
+        listings = parse_search_results(html)
+
+        self.assertGreater(len(listings), 0)
+
+        required_fields = (
+            "listing_id",
+            "title",
+            "living_space_sqm",
+            "price_eur",
+            "city",
+            "postcode",
+        )
+        allowed_nullable = {"street", "house_number", "quarter"}
+
+        for listing in listings:
+            for key in required_fields:
+                self.assertIsNotNone(listing.get(key), f"{key} should not be null for listing {listing}")
+            for key in allowed_nullable:
+                self.assertTrue(key in listing, f"{key} key should always be present")
+
 
 if __name__ == "__main__":
     unittest.main()

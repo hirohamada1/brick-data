@@ -24,3 +24,4 @@ Immotool processes scraped real-estate data to:
 ## Safety rules
 - No direct production writes without staging approval
 - DB writes only after tests passed
+

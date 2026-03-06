@@ -55,7 +55,7 @@ const SOURCE_OPTIONS: { value: ListingSource; label: string }[] = [
 export default function Listings() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const openId = searchParams?.get("open");
+  const openId = searchParams?.get("open") ?? null;
   const {
     listings,
     watchlists,
@@ -104,8 +104,7 @@ export default function Listings() {
   );
 
   const setOpenParam = (value: string | null) => {
-    const params = new URLSearchParams(searchParams?.toString() ?? "");
-
+    const params = new URLSearchParams(searchParams.toString());
     if (value) params.set("open", value);
     else params.delete("open");
 

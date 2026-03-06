@@ -17,7 +17,7 @@ def main():
             "search_url": (
                 "https://www.immobilienscout24.de/Suche/de/baden-wuerttemberg/stuttgart/wohnung-kaufen?numberofrooms=4.0-&livingspace=-75.0&enteredFrom=result_list"
             ),
-            "user_id": str(uuid.uuid4()),
+            "user_id": "088f9028-e12f-4c21-8789-c87cac4a4be2",
         }
     )  
 

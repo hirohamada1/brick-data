@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
 
-import routes.watchlist as watchlist_routes  # type: ignore  # noqa: E402
+import src.routes.watchlist as watchlist_routes  # type: ignore  # noqa: E402
 from api import app  # type: ignore  # noqa: E402
 
 

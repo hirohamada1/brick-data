@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException
@@ -35,10 +35,20 @@ def _is_valid_url(value: str) -> bool:
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
 
+def _normalize_is24_url(url: str) -> str:
+    """Ensure the IS24 search URL contains enteredFrom=result_list."""
+    parsed = urlparse(url)
+    params = parse_qs(parsed.query)
+    if "enteredFrom" not in params:
+        params["enteredFrom"] = ["result_list"]
+    new_query = urlencode(params, doseq=True)
+    return urlunparse(parsed._replace(query=new_query))
+
+
 @router.post("/api/watchlists")
 def post_watchlist(payload: WatchlistCreateIn):
     name = payload.name.strip()
-    search_url = payload.search_url.strip()
+    search_url = _normalize_is24_url(payload.search_url.strip())
 
     if not name:
         raise HTTPException(status_code=400, detail="name must be non-empty")

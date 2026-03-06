@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
-
-from dotenv import load_dotenv
+from src.settings import settings  # noqa: F401  — triggers APP_ENV-based load_dotenv
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,9 +12,6 @@ try:
     from src.routes.webhooks import router as webhooks_router # webhooks router für Clerk Events
 except Exception:
     webhooks_router = None
-
-ENV_PATH = Path(__file__).resolve().parents[3] / ".env.local"
-load_dotenv(ENV_PATH)
 
 app = FastAPI(title="Immo Scan Backend API")
 app.add_middleware(

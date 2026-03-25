@@ -8,8 +8,8 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist" })
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" })
 
 export const metadata: Metadata = {
-  title: 'Immobilien Tool - Watchlist & Analyse',
-  description: 'Analysieren Sie Immobilienangebote mit automatischen Berechnungen für Rendite, Kaufnebenkosten und mehr.',
+  title: 'StackProof - Master Programming in the AI Era',
+  description: 'Learn verification engineering, agentic workflows, and systems fundamentals. The skills that define future software engineers.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -36,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="de" className="dark" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
         <Analytics />
